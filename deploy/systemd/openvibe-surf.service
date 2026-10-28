@@ -1,0 +1,30 @@
+[Unit]
+Description=OpenVibe.Surf — Ride maps, surf the web, surf what's on.
+# Network (sign-in, JWKS) should be up first, but OpenVibe.Surf degrades honestly without it: the pages, Watch and
+# Ride serve, and sign-in waits for the signing key (see /api/ready). Live, Games and Actor are optional per request.
+After=network.target
+Wants=openvibe-network.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/openvibe.surf
+EnvironmentFile=/etc/openvibe/surf.env
+Environment=NODE_ENV=production
+Environment=PORT=5110
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env node /opt/openvibe.surf/server/index.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+# In-flight requests get the 10 s drain.
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# Stateless: the code tree is read-only and nothing here writes to disk.
+
+[Install]
+WantedBy=multi-user.target

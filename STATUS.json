@@ -1,0 +1,53 @@
+{
+  "repository": "OpenVibers/OpenVibe.Surf",
+  "version": "0.1.0",
+  "stage": "v1",
+  "code": true,
+  "wave": "W20",
+  "plan": "OpenVibe.Surf: one room with three surfs. Ride is CS-style surf in the browser served by OpenVibe.Games; Watch is lean-back channel surfing over OpenVibe.Live's live streams, clips and AI moments; Web is Surf with Vibe, where an agent browses for you on a private desk through OpenVibe.Actor.",
+  "runtime": "node 22, express 4, openvibe-shared/shell; stateless (no database, no Valkey, no Events)",
+  "port": "5110",
+  "domain": "openvibe.surf",
+  "contracts": "openvibe-contracts v0.230.0",
+  "sdk": "openvibe-sdk v0.70.0",
+  "shared": "openvibe-shared v4.31.0",
+  "packages": [
+    "openvibe-contracts v0.230.0",
+    "openvibe-sdk v0.70.0",
+    "openvibe-shared v4.31.0"
+  ],
+  "summary": "The service skeleton for openvibe.surf: Network sign-in as OAuth client `surf` (PKCE S256, httpOnly surf_at/surf_rt cookies), the Watch feed merged from OpenVibe.Live (live streams by viewers, then clips and moments interleaved by freshness, no same-channel runs, cached 30 s, each source given 2 s, failures named in `sources`), the Ride proxy to OpenVibe.Games' /api/surf/maps (cached 60 s, games: 'not_ready' while Games' new routes answer 404, an embed URL per map), and Surf with Vibe: a signed-in, same-origin POST that creates one OpenVibe.Actor task with the person's own Network token as a Bearer, an Idempotency-Key and a cited browsing brief, plus /web/go as the no-JavaScript form. The pages are placeholders for the main session: stable sf- ids and classes, semantic HTML, readable without JavaScript.",
+  "works": [
+    "Sign-in with OpenVibe.Network: OAuth 2 authorization code, PKCE S256, state check, server-side exchange, httpOnly surf_at/surf_rt cookies, sanitizeNext (own origins only, no control characters or backslashes)",
+    "Watch GET /api/v1/watch/feed?topic=all|live|clips|moments&cursor=: merges OpenVibe.Live's /api/streams, /api/content/feed?type=clips and /api/content/moments?type=clips into one item shape, ranks live by viewers then moments/clips by freshness with no channel twice in a row, caches 30 s, 2 s per source, a failing source left out and named in sources, public max-age=30",
+    "Ride GET /api/v1/ride/maps and /api/v1/ride/maps/:id: proxies OpenVibe.Games' /api/surf/maps routes, adds each map's embed_url (https://openvibe.games/play/surf?map=<id>&embed=1), caches 60 s, Games 404 → empty list/map shell with games: 'not_ready'",
+    "Web POST /api/v1/web/tasks: signed in, same-origin, query 3–500 characters, sends the person's surf_at token to OpenVibe.Actor as a Bearer with an Idempotency-Key and the prefixed browsing brief, answers { task_id, page }, and passes Actor's 4xx refusal through in words",
+    "GET /web/go?q=: the same task as a plain form for no-JavaScript: 303 to the Actor task page, sign-in redirect for a guest, Actor's refusal in plain words",
+    "Server-rendered pages: / (three tiles), /ride (maps list and first embed), /ride/:map (name, tier, stages, records, embed), /watch (feed list with thumbnails and play links, HLS hooks for the main session's video), /web (the form), /developers and a 404; public max-age=60 with Vary: Cookie, signed-in private, no-store",
+    "Crawl artifacts (robots.txt, sitemap.xml with the public pages and Ride maps, llms.txt), /api/health, /api/ready (degraded when Network/Live/Games/Actor do not answer), /release.json, /release-metrics, /shared/*",
+    "Helmet with the network's CSP (Games and Live frames, openvibe.media HLS), per-IP 120/min on /api and /auth, content-hashed /css and /js, graceful stop",
+    "Deploy files: openvibe-surf.service, nginx vhost for openvibe.surf on 127.0.0.1:5110 with the forms zone, /auth/me on the API zone and /internal + /metrics 404",
+    "Tests: feed merge/order/shape/failing source/30 s cache/cursor, ride proxy/cache/not_ready/failure, web 401/403/Actor Bearer + Idempotency-Key + prefixed text/refusal/redirect, SSO (Design's cases), pages/cache headers/CSP, discovery"
+  ],
+  "notYet": [
+    "The pages' design and public/css/surf.css + public/js/surf.js: the main session writes them; today the views are semantic placeholders and the assets are one-comment files (the HLS <video> player is the main session's script)",
+    "OpenVibe.Games' GET /api/surf/maps and /api/surf/maps/:id are being added in parallel; until they ship, Ride answers games: 'not_ready'",
+    "A Surf service manifest and capabilities in OpenVibe.Contracts: this service has no capability of its own and no other service calls it",
+    "Deployment: the deploy files are written, but the service is not deployed yet"
+  ],
+  "capabilitiesRegistered": false,
+  "serviceManifestRegistered": false,
+  "deployed": false,
+  "placeholderInSites": false,
+  "features": [
+    "Network sign-in (PKCE)",
+    "Watch merged Live feed",
+    "Ride Games maps proxy",
+    "Surf with Vibe via OpenVibe.Actor",
+    "server-rendered pages",
+    "crawl artifacts",
+    "limits and readiness",
+    "deploy files"
+  ],
+  "updated": "2026-10-28"
+}
