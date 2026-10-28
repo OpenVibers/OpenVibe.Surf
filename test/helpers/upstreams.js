@@ -70,12 +70,12 @@ async function startUpstreams() {
         dvr: { 9002: 'https://openvibe.media/v/9002/dvr.m3u8' },
         fail: { streams: null, clips: null, moments: null },
         delay: { streams: 0, clips: 0, moments: 0 },
-        actor: { status: 201, id: 'tsk_01J8SURFEXAMPLE00000000', problem: null },
+        actor: { status: 201, id: 'tsk_01J8SURFEXAMPLE00000000', problem: null, task: null, events: [] },
         requests: [],
         counts: { streams: 0, clips: 0, moments: 0, maps: 0, map: 0, actor: 0 },
     };
 
-    const srv = await listen(async (req, raw, json) => {
+    const srv = await listen(async (req, raw, json, res) => {
         const url = new URL(req.url, 'http://x');
         const p = url.pathname;
         const entry = { method: req.method, path: p, query: Object.fromEntries(url.searchParams), headers: { ...req.headers }, body: raw };
@@ -136,6 +136,14 @@ async function startUpstreams() {
                 return json(state.actor.status, state.actor.problem || { type: 'about:blank', title: 'Refused', status: state.actor.status, code: 'actor.refused', detail: 'OpenVibe.Actor refused this task.' });
             }
             return json(state.actor.status, { id: state.actor.id, state: 'queued', task: 'the task' });
+        }
+        if (p === `/api/v1/tasks/${state.actor.id}` && req.method === 'GET') {
+            return json(200, state.actor.task || { id: state.actor.id, state: 'running', task: 'Surf the web', result: null });
+        }
+        if (p === `/api/v1/tasks/${state.actor.id}/events` && req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+            for (const event of state.actor.events) res.write(`id: ${event.seq}\nevent: ${event.kind}\ndata: ${JSON.stringify(event)}\n\n`);
+            return res.end();
         }
         return json(404, { error: 'not found' });
     });

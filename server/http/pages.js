@@ -7,7 +7,8 @@
  *   /ride/:map        one map: name, tier, stages, records, the embed
  *   /watch            the merged Live feed as a list with thumbnails and play links
  *   /web              the Surf with Vibe form and what it does
- *   /web/go?q=        the no-JavaScript form: create the task, 303 to its Actor page
+ *   /web/go          the no-JavaScript form: create the task, 303 to its Surf page
+ *   /web/t/:taskId   a person's live desk, steps, sources and report
  *   /developers       the API, for people and agents
  *
  * Every page is server-rendered and complete without JavaScript. A page for a signed-in person is private and
@@ -83,6 +84,18 @@ function createPageRoutes(ctx) {
     });
 
     r.get('/web', (req, res) => page(res, 200, views.web({ me: meOf(req.viewer), query: typeof req.query.q === 'string' ? req.query.q.slice(0, 500) : '' }), req.viewer));
+
+    r.get('/web/t/:taskId', async (req, res) => {
+        res.set('Cache-Control', 'private, no-store');
+        const token = req.viewer && req.viewer.kind === 'user' ? req.viewer.token : null;
+        if (!token) return res.redirect(303, `/auth/login?next=${encodeURIComponent(req.originalUrl)}`);
+        try {
+            const task = await web.task({ token, id: req.params.taskId });
+            return page(res, 200, views.webTask({ task, actorUrl: config.actorPublicUrl }), req.viewer);
+        } catch (err) {
+            return page(res, err.status === 404 ? 404 : 502, views.webTaskError({ notFound: err.status === 404 }), req.viewer);
+        }
+    });
 
     // The no-JavaScript form: a POST from this site that creates one task and goes to it (303). The query is in the
     // body, never in a URL (so never in a log); another site's form is refused by its Origin.

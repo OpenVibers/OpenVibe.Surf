@@ -1,7 +1,7 @@
 'use strict';
 /**
  * Web: signed out 401, cross-site 403, the Actor call carries the person's Bearer and an Idempotency-Key and the
- * prefixed browsing brief, Actor's refusal passes through in words, and the plain form (POST /web/go, this site only) 303s to the Actor task page.
+ * prefixed browsing brief, Actor's refusal passes through in words, and the plain form (POST /web/go, this site only) 303s to the Surf task page.
  */
 const assert = require('assert');
 const { boot, check, done } = require('./helpers/boot');
@@ -45,7 +45,7 @@ const ORIGIN = 'https://openvibe.surf';
         assert.strictEqual(r.status, 201, r.text);
         const b = r.json();
         assert.strictEqual(b.task_id, 'tsk_01J8SURFEXAMPLE00000000');
-        assert.strictEqual(b.page, 'https://openvibe.actor/tasks/tsk_01J8SURFEXAMPLE00000000');
+        assert.strictEqual(b.page, '/web/t/tsk_01J8SURFEXAMPLE00000000');
         assert.strictEqual(r.headers.get('cache-control'), 'private, no-store');
         assert.strictEqual(t.upstreams.state.counts.actor, 1);
 
@@ -100,11 +100,11 @@ const ORIGIN = 'https://openvibe.surf';
     });
 
     const own = { origin: 'https://openvibe.surf', 'sec-fetch-site': 'same-origin' };
-    await check('POST /web/go (the plain form) creates the task and 303s to the Actor task page; the query is never in a URL', async () => {
+    await check('POST /web/go (the plain form) creates the task and 303s to the Surf task page; the query is never in a URL', async () => {
         t.upstreams.resetCounts();
         const r = await t.get('/web/go', { cookie: signedIn, form: { q: 'find the best surf spots in Portugal' }, headers: own });
         assert.strictEqual(r.status, 303, r.text);
-        assert.strictEqual(r.headers.get('location'), 'https://openvibe.actor/tasks/tsk_01J8SURFEXAMPLE00000000');
+        assert.strictEqual(r.headers.get('location'), '/web/t/tsk_01J8SURFEXAMPLE00000000');
         assert.strictEqual(r.headers.get('cache-control'), 'private, no-store');
         const sent = t.upstreams.lastFor('/api/v1/tasks');
         assert.strictEqual(sent.headers.authorization, `Bearer ${token}`);
@@ -132,6 +132,55 @@ const ORIGIN = 'https://openvibe.surf';
         t.upstreams.state.actor.problem = null;
         assert.strictEqual(r.status, 429);
         assert.match(r.text, /free tier runs 5 tasks a day/);
+    });
+
+    await check('the Surf task page shows the private desk link, cited sources and report', async () => {
+        const desk = `https://openvibe.bot/machines/dev_${'A'.repeat(26)}/screen?desk=desk-surf`;
+        t.upstreams.state.actor.task = {
+            id: t.upstreams.state.actor.id, state: 'succeeded', task: '<find a flight>',
+            desk: { url: desk, kind: 'browser' }, needs_you: { what: 'Sign in on the desk.' },
+            result: { answer: 'Found a flight < $500.', sources: ['https://example.com/flight', 'javascript:alert(1)'] },
+        };
+        const r = await t.get(`/web/t/${t.upstreams.state.actor.id}`, { cookie: signedIn });
+        assert.strictEqual(r.status, 200, r.text);
+        assert.strictEqual(r.headers.get('cache-control'), 'private, no-store');
+        assert.match(r.text, /&lt;find a flight&gt;/);
+        assert.match(r.text, /Found a flight &lt; \$500/);
+        assert.match(r.text, /https:\/\/example.com\/flight/);
+        assert.doesNotMatch(r.text, /javascript:alert/);
+        assert.match(r.text, /Take over/);
+        assert.match(r.text, /openvibe\.bot\/machines/);
+        assert.match(r.text, /openvibe\.actor\/tasks/);
+        assert.ok(!r.text.includes(token));
+        const sent = t.upstreams.lastFor(`/api/v1/tasks/${t.upstreams.state.actor.id}`);
+        assert.strictEqual(sent.headers.authorization, `Bearer ${token}`);
+    });
+
+    await check('task JSON and live events use the person’s token without exposing it to the browser', async () => {
+        const id = t.upstreams.state.actor.id;
+        t.upstreams.state.actor.events = [{ seq: 1, kind: 'output', step: 'tool_result', text: 'Read page evidence' }, { seq: 2, kind: 'end', state: 'succeeded' }];
+        const info = await t.get(`/api/v1/web/tasks/${id}`, { cookie: signedIn });
+        assert.strictEqual(info.status, 200, info.text);
+        assert.strictEqual(info.json().id, id);
+        assert.strictEqual(info.headers.get('cache-control'), 'private, no-store');
+        const live = await t.get(`/api/v1/web/tasks/${id}/events`, { cookie: signedIn });
+        assert.strictEqual(live.status, 200, live.text);
+        assert.match(live.headers.get('content-type'), /text\/event-stream/);
+        assert.match(live.text, /Read page evidence/);
+        assert.ok(!live.text.includes(token));
+        assert.strictEqual(t.upstreams.lastFor(`/api/v1/tasks/${id}/events`).headers.authorization, `Bearer ${token}`);
+        assert.strictEqual((await t.get(`/api/v1/web/tasks/${id}`)).status, 401);
+        assert.strictEqual((await t.get(`/api/v1/web/tasks/${id}/events`)).status, 401);
+    });
+
+    await check('an unrelated task and an unsafe desk URL are never presented as a live desk', async () => {
+        const id = t.upstreams.state.actor.id;
+        t.upstreams.state.actor.task = { id, state: 'running', task: 'Surf', desk: { url: 'https://evil.example/machines/dev_x/screen' } };
+        const r = await t.get(`/web/t/${id}`, { cookie: signedIn });
+        assert.strictEqual(r.status, 200);
+        assert.doesNotMatch(r.text, /evil\.example/);
+        const other = await t.get('/web/t/tsk_other00000', { cookie: signedIn });
+        assert.strictEqual(other.status, 404);
     });
 
     await t.close();
