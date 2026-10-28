@@ -4,6 +4,7 @@
  * OpenVibe.Surf — Express app factory; server/index.js listens, tests build their own instance with mock upstreams.
  *
  *   /, /ride, /ride/:map, /watch, /web, /developers   the pages (http/pages.js)
+ *   /watch/party, /watch/p/:id, …/events              watch together (http/party.js)
  *   /web/go                                           the no-JavaScript task form
  *   /api/v1/watch/feed, /api/v1/ride/maps…            Watch and Ride (http/api.js)
  *   /api/v1/web/tasks                                 Surf with Vibe (http/api.js)
@@ -11,8 +12,9 @@
  *   /api/health, /api/ready, /release.json            liveness, truthful readiness, release metadata
  *   /robots.txt, /sitemap.xml, /llms.txt              crawl artifacts (http/discovery.js)
  *
- * Stateless: no database, no Valkey, no Events. The dependencies are OpenVibe.Network (sign-in), OpenVibe.Live
- * (Watch), OpenVibe.Games (Ride) and OpenVibe.Actor (Web); the pages degrade honestly without any of them.
+ * No database, no Valkey, no Events. The only live state is in memory: the Watch feed cache and the watch-together
+ * parties (a restart ends every party). The dependencies are OpenVibe.Network (sign-in), OpenVibe.Live (Watch),
+ * OpenVibe.Games (Ride) and OpenVibe.Actor (Web); the pages degrade honestly without any of them.
  */
 const path = require('path');
 const express = require('express');
@@ -29,10 +31,12 @@ const configLib = require('./config');
 const { createKeyStore } = require('./auth/keys');
 const { createSso } = require('./auth/sso');
 const { createWatchFeed } = require('./watch/feed');
+const { createParties } = require('./watch/party');
 const { createRide } = require('./ride/games');
 const { createWeb } = require('./web/tasks');
 const { createApi } = require('./http/api');
 const { createPageRoutes } = require('./http/pages');
+const { createPartyRoutes } = require('./http/party');
 const { createDiscoveryRoutes } = require('./http/discovery');
 const { createServiceReadiness } = require('./observability');
 const { PUBLIC_DIR, assetVersion } = require('./assets');
@@ -53,9 +57,14 @@ function createApp(opts = {}) {
     const keys = createKeyStore({ config, fetchImpl, log });
     const sso = createSso({ config, keys, fetchImpl, log, now });
     const feed = createWatchFeed({ config, fetchImpl, log, now });
+    const parties = createParties({ now, maxParties: config.partyMax, maxMembers: config.partyMemberMax });
     const ride = createRide({ config, fetchImpl, log, now });
     const web = createWeb({ config, fetchImpl, log });
-    const ctx = { config, keys, sso, feed, ride, web, log };
+    const ctx = { config, keys, sso, feed, parties, ride, web, log };
+    // Empty parties are dropped lazily on every read; this also frees them when nobody is asking. It never keeps
+    // the process alive (unref) and is only memory, like the Map itself.
+    const partySweep = setInterval(() => parties.sweep(), 60_000);
+    if (partySweep.unref) partySweep.unref();
 
     const release = opts.release || releaseLib.createRelease({ service: 'surf', root: path.join(__dirname, '..') });
     views.setRelease(release.release);
@@ -134,6 +143,9 @@ function createApp(opts = {}) {
     app.use('/js', express.static(path.join(PUBLIC_DIR, 'js'), { index: false, redirect: false, setHeaders: setAssetHeaders }));
     // hls.js 1.7.3 light (the same file openvibe.video serves), loaded by js/surf.js only where a browser cannot play HLS.
     app.use('/vendor', express.static(path.join(PUBLIC_DIR, 'vendor'), { index: false, redirect: false, setHeaders: setAssetHeaders }));
+
+    // ── Watch together: the party page, SSE and host commands ─
+    app.use(createPartyRoutes(ctx));
 
     // ── API: Watch, Ride and Web ────────────────────────────
     app.use('/api', express.json({ limit: '32kb' }));

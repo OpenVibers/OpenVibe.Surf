@@ -141,43 +141,83 @@ ${rows ? `<table class="sf-board" id="sf-top"><thead><tr><th scope="col">#</th><
     return layout({ title: `${name}: Ride`, description: `${name}: a surf map you ride in the browser, with stages, a millisecond timer and records.`, path: `/ride/${encodeURIComponent(id || one.id || '')}`, body, active: '/ride' });
 }
 
+const TV_LABEL = { live: 'Live', clip: 'Clip', moment: 'AI moment' };
+const kindOf = (it) => (it.kind === 'moment' ? 'moment' : it.kind === 'clip' ? 'clip' : 'live');
+
+/** The TV itself, shared by /watch and the party page: selected channel first, then the whole guide. */
+function tvBlock({ feed = null, selectedKey = null, empty = null } = {}) {
+    const items = feed && Array.isArray(feed.items) ? feed.items : [];
+    const first = (selectedKey && items.find((it) => it.key === selectedKey)) || items[0] || null;
+    const start = first ? items.indexOf(first) : 0;
+    if (!first) {
+        return `<div class="sf-empty" id="sf-watch-empty">${kit.icon('play')}<p>${esc(empty || (feed ? 'Nothing on this channel right now. Try another, or come back soon.' : 'OpenVibe.Live did not answer. Try again in a moment.'))}</p></div>`;
+    }
+    const k = kindOf(first);
+    const p = first.play || {};
+    const media = p.type === 'hls' && p.src
+        ? `<video class="sf-tv-video" data-sf-video playsinline controls preload="none" poster="${esc(first.thumbnail || '')}" src="${esc(p.src)}"></video>`
+        : `${first.thumbnail ? `<img class="sf-tv-poster" src="${esc(first.thumbnail)}" alt="" loading="eager">` : '<span class="sf-tv-poster"></span>'}<a class="sf-tv-out" href="${esc(p.page || '#')}">${kit.icon('play')}${k === 'live' ? 'Watch live on OpenVibe.Live' : 'Play on OpenVibe.Live'}</a>`;
+    const stage = `<div class="sf-tv-main"><div class="sf-tv-screen" data-sf-screen>${media}</div>
+<div class="sf-tv-info"><p class="sf-tv-kind"><span class="sf-pill sf-pill--${esc(k)}">${esc(TV_LABEL[k])}</span><span data-sf-why>${esc(first.why || '')}</span></p>
+<h2 data-sf-title>${esc(first.title || '')}</h2>
+<p class="sf-tv-meta" data-sf-meta>${first.channel && first.channel.username ? `<a href="https://openvibe.live/@${encodeURIComponent(first.channel.username)}">@${esc(first.channel.username)}</a>` : ''}</p>
+<p class="sf-tv-keys"><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-prev aria-label="Previous channel">${kit.icon('up')}</button><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-next aria-label="Next channel">${kit.icon('down')}</button><span class="sf-fine">Swipe, or press <kbd>↑</kbd> <kbd>↓</kbd></span></p></div></div>`;
+    const rows = items.map((it, i) => {
+        const rowKind = kindOf(it);
+        const rowPlay = it.play || {};
+        const on = it === first;
+        return `<li class="sf-ch${on ? ' is-on' : ''}" id="sf-item-${esc(idSafe(it.key))}" data-sf-i="${i}" data-sf-kind="${esc(rowKind)}" data-sf-play-type="${esc(rowPlay.type || '')}"${rowPlay.src ? ` data-sf-src="${esc(rowPlay.src)}"` : ''} data-sf-page="${esc(rowPlay.page || '')}" data-sf-thumb="${esc(it.thumbnail || '')}" data-sf-why="${esc(it.why || '')}" data-sf-channel="${esc((it.channel && it.channel.username) || '')}" data-sf-key="${esc(it.key || '')}">
+<a class="sf-ch-link" href="${esc(rowPlay.page || '#')}">
+<span class="sf-ch-thumb">${it.thumbnail ? `<img src="${esc(it.thumbnail)}" alt="" loading="lazy" decoding="async">` : ''}${it.duration_seconds != null ? `<span class="sf-ch-len">${esc(clipLen(it.duration_seconds))}</span>` : ''}${rowKind === 'live' ? '<span class="sf-ch-live">LIVE</span>' : ''}</span>
+<span class="sf-ch-body"><b>${esc(it.title || '')}</b><small>${it.channel && it.channel.username ? `@${esc(it.channel.username)} · ` : ''}${esc(it.why || TV_LABEL[rowKind])}</small></span>
+</a></li>`;
+    }).join('');
+    return `<div class="sf-tv" id="sf-tv" data-sf-tv data-sf-start="${start}">${stage}<aside class="sf-guide" aria-labelledby="sf-guide-h"><h2 id="sf-guide-h">Up next</h2><ol class="sf-chs" id="sf-watch-feed">${rows}</ol>
+${feed && feed.next ? `<a class="sf-more" id="sf-watch-next" href="/watch?topic=${esc(feed.topic || 'all')}&amp;cursor=${esc(feed.next)}">More${kit.icon('chevron')}</a>` : ''}</aside></div>`;
+}
+
 function watch({ feed = null, topic = 'all' } = {}) {
     const items = feed && Array.isArray(feed.items) ? feed.items : [];
     const tabs = [['all', 'All'], ['live', 'Live'], ['clips', 'Clips'], ['moments', 'AI moments']].map(([id, label]) =>
         `<a class="sf-topic" href="/watch?topic=${id}"${id === topic ? ' aria-current="page"' : ''}>${label}</a>`).join('');
-    const first = items[0] || null;
-    const kindOf = (it) => (it.kind === 'moment' ? 'moment' : it.kind === 'clip' ? 'clip' : 'live');
-    const label = { live: 'Live', clip: 'Clip', moment: 'AI moment' };
-    const stage = first ? (() => {
-        const k = kindOf(first);
-        const p = first.play || {};
-        const media = p.type === 'hls' && p.src
-            ? `<video class="sf-tv-video" data-sf-video playsinline controls preload="none" poster="${esc(first.thumbnail || '')}" src="${esc(p.src)}"></video>`
-            : `${first.thumbnail ? `<img class="sf-tv-poster" src="${esc(first.thumbnail)}" alt="" loading="eager">` : '<span class="sf-tv-poster"></span>'}<a class="sf-tv-out" href="${esc(p.page || '#')}">${kit.icon('play')}${k === 'live' ? 'Watch live on OpenVibe.Live' : 'Play on OpenVibe.Live'}</a>`;
-        return `<div class="sf-tv-main"><div class="sf-tv-screen" data-sf-screen>${media}</div>
-<div class="sf-tv-info"><p class="sf-tv-kind"><span class="sf-pill sf-pill--${esc(k)}">${esc(label[k])}</span><span data-sf-why>${esc(first.why || '')}</span></p>
-<h2 data-sf-title>${esc(first.title || '')}</h2>
-<p class="sf-tv-meta" data-sf-meta>${first.channel && first.channel.username ? `<a href="https://openvibe.live/@${encodeURIComponent(first.channel.username)}">@${esc(first.channel.username)}</a>` : ''}</p>
-<p class="sf-tv-keys"><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-prev aria-label="Previous channel">${kit.icon('up')}</button><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-next aria-label="Next channel">${kit.icon('down')}</button><span class="sf-fine">Swipe, or press <kbd>↑</kbd> <kbd>↓</kbd></span></p></div></div>`;
-    })() : '';
-    const rows = items.map((it, i) => {
-        const k = kindOf(it);
-        const p = it.play || {};
-        return `<li class="sf-ch${i === 0 ? ' is-on' : ''}" id="sf-item-${esc(idSafe(it.key))}" data-sf-i="${i}" data-sf-kind="${esc(k)}" data-sf-play-type="${esc(p.type || '')}"${p.src ? ` data-sf-src="${esc(p.src)}"` : ''} data-sf-page="${esc(p.page || '')}" data-sf-thumb="${esc(it.thumbnail || '')}" data-sf-why="${esc(it.why || '')}" data-sf-channel="${esc((it.channel && it.channel.username) || '')}">
-<a class="sf-ch-link" href="${esc(p.page || '#')}">
-<span class="sf-ch-thumb">${it.thumbnail ? `<img src="${esc(it.thumbnail)}" alt="" loading="lazy" decoding="async">` : ''}${it.duration_seconds != null ? `<span class="sf-ch-len">${esc(clipLen(it.duration_seconds))}</span>` : ''}${k === 'live' ? '<span class="sf-ch-live">LIVE</span>' : ''}</span>
-<span class="sf-ch-body"><b>${esc(it.title || '')}</b><small>${it.channel && it.channel.username ? `@${esc(it.channel.username)} · ` : ''}${esc(it.why || label[k])}</small></span>
-</a></li>`;
-    }).join('');
     const missing = feed && feed.sources ? Object.entries(feed.sources).filter(([, v]) => v !== 'ok').map(([k]) => k) : [];
     const body = `<div class="sf-wrap sf-page-pad">
-<header class="sf-page-h sf-watch-h"><div><p class="sf-kicker">Watch</p><h1>Surf what's on</h1></div><nav class="sf-topics" id="sf-topics" aria-label="What to watch">${tabs}</nav></header>
+<header class="sf-page-h sf-watch-h"><div><p class="sf-kicker">Watch</p><h1>Surf what's on</h1></div><div class="sf-watch-tools"><nav class="sf-topics" id="sf-topics" aria-label="What to watch">${tabs}</nav>
+<form class="sf-party-start" method="post" action="/watch/party"><button class="ovk-btn ovk-btn--quiet ovk-btn--small" type="submit">${kit.icon('play')}Watch together</button></form></div></header>
 ${missing.length ? `<p class="sf-note" id="sf-sources">Some of OpenVibe.Live did not answer (${esc(missing.join(', '))}); the rest is here.</p>` : ''}
-${items.length ? `<div class="sf-tv" id="sf-tv" data-sf-tv>${stage}<aside class="sf-guide" aria-labelledby="sf-guide-h"><h2 id="sf-guide-h">Up next</h2><ol class="sf-chs" id="sf-watch-feed">${rows}</ol>
-${feed && feed.next ? `<a class="sf-more" id="sf-watch-next" href="/watch?topic=${esc(topic)}&amp;cursor=${esc(feed.next)}">More${kit.icon('chevron')}</a>` : ''}</aside></div>`
-        : `<div class="sf-empty" id="sf-watch-empty">${kit.icon('play')}<p>${feed ? 'Nothing on this channel right now. Try another, or come back soon.' : 'OpenVibe.Live did not answer. Try again in a moment.'}</p></div>`}
+${tvBlock({ feed })}
 </div>`;
     return layout({ title: 'Watch', description: 'Lean-back channel surfing over OpenVibe.Live: who is live, clips and the week\'s AI moments in one feed.', path: '/watch', body, active: '/watch' });
+}
+
+/** The party bar: members, host, Copy link, Leave, and the optional OpenVibe.Chat room link (a link only). */
+function partyBar({ party = {}, isHost = false, partyPath = '' } = {}) {
+    const chat = party.chat_url ? String(party.chat_url) : null;
+    const chatLink = chat
+        ? `<p class="sf-party-chat" data-sf-party-chat><a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">${kit.icon('globe')}Chat in OpenVibe.Chat</a></p>`
+        : '<p class="sf-party-chat" data-sf-party-chat hidden></p>';
+    const chatForm = isHost
+        ? `<form class="sf-party-chat-form" data-sf-party-chat-form action="${esc(partyPath)}/chat" method="post"><label for="sf-party-chat-url" class="sf-fine">OpenVibe.Chat room link (optional)</label><input id="sf-party-chat-url" name="chat_url" type="url" inputmode="url" maxlength="500" placeholder="https://openvibe.chat/..." value="${esc(chat || '')}"><button class="ovk-btn ovk-btn--quiet ovk-btn--small" type="submit">Set</button></form>`
+        : '';
+    return `<section class="sf-party" id="sf-party" data-sf-party data-sf-party-id="${esc(party.id || '')}" data-sf-party-is-host="${isHost ? '1' : '0'}" data-sf-party-channel="${esc(party.channel_key || '')}" data-sf-party-position="${esc(party.position_s == null ? 0 : party.position_s)}" data-sf-party-playing="${party.playing === false ? '0' : '1'}" data-sf-party-at="${esc(party.at || 0)}" data-sf-party-url="${esc(partyPath)}">
+<div class="sf-party-bar">
+<p class="sf-party-who"><span class="sf-party-dot" aria-hidden="true"></span>Watch together · <b data-sf-party-members>${esc(party.members == null ? 1 : party.members)}</b> here · host <b data-sf-party-host-name>${esc(party.host || 'the host')}</b></p>
+<div class="sf-party-actions"><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-party-copy data-sf-party-url="${esc(partyPath)}">Copy link</button>
+<form method="post" action="${esc(partyPath)}/leave"><button type="submit" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-party-leave>Leave</button></form></div>
+</div>
+<p class="sf-fine sf-party-share">Share this link: <a href="${esc(partyPath)}" data-sf-party-link>${esc(partyPath)}</a>${isHost ? ' · you are the host' : ' · the host picks the channel and the position'}</p>
+<p class="sf-status" data-sf-party-status role="status"></p>
+${chatLink}${chatForm}
+</section>`;
+}
+
+function party({ feed = null, party: p = {}, selectedKey = null, isHost = false, partyPath = '' } = {}) {
+    const body = `<div class="sf-wrap sf-page-pad sf-party-page">
+<header class="sf-page-h sf-watch-h"><div><p class="sf-kicker">Watch · Together</p><h1>Watch together</h1></div><a class="sf-more" href="/watch">Back to Watch${kit.icon('chevron')}</a></header>
+${partyBar({ party: p, isHost, partyPath })}
+${tvBlock({ feed, selectedKey, empty: "This party's channel is not in the guide right now, or OpenVibe.Live did not answer. Try again in a moment." })}
+</div>`;
+    return layout({ title: 'Watch together', description: 'Watch the same OpenVibe.Live channel at the same moment with friends: the host picks, everyone follows.', path: partyPath, robots: 'noindex, nofollow', body, active: '/watch' });
 }
 
 const EXAMPLES = ['A cheap flight to Lisbon in March and three things to do', 'What do runners say about the Pegasus 42?', 'Compare three hosting plans under $10 a month'];
@@ -214,6 +254,7 @@ function developers() {
         ['GET /api/v1/ride/maps', 'The surf maps from OpenVibe.Games: id, name, tier, stages, author, runs, the record. Cached 60 s.'],
         ['GET /api/v1/ride/maps/:id', 'One map, its fastest runs and its <code>embed_url</code>.'],
         ['POST /api/v1/web/tasks', 'Signed in, from this site: <code>{ query }</code> (3–500 characters) starts an OpenVibe.Actor task as you and answers <code>{ task_id, page }</code>.'],
+        ['POST /watch/party · GET /watch/p/:id/events', 'Watch together: signed in and same-site, opens an in-memory party at <code>/watch/p/&lt;id&gt;</code> (303, or 201 JSON). The SSE stream carries the host\'s <code>{ channel_key, position_s, playing, at }</code> commands to every member; a restart ends the party.'],
     ];
     const body = `<div class="sf-wrap sf-page-pad">
 <header class="sf-page-h"><p class="sf-kicker">For developers</p><h1>The Surf API</h1>
@@ -223,13 +264,16 @@ function developers() {
     return layout({ title: 'The Surf API', path: '/developers', body, active: '/developers' });
 }
 
-function notFound() {
-    const body = `<div class="sf-wrap sf-page-pad sf-narrow"><div class="sf-empty" id="sf-not-found">${kit.icon('game')}<h1>Wiped out</h1><p>There is nothing at this address. Try <a href="/ride">a map</a>, <a href="/watch">what's on</a> or <a href="/web">asking Vibe</a>.</p></div></div>`;
+function notFound({ party = false } = {}) {
+    const text = party
+        ? 'This watch party has ended, or its link is not one we made. Start a new one from <a href="/watch">Watch</a>.'
+        : 'There is nothing at this address. Try <a href="/ride">a map</a>, <a href="/watch">what\'s on</a> or <a href="/web">asking Vibe</a>.';
+    const body = `<div class="sf-wrap sf-page-pad sf-narrow"><div class="sf-empty" id="sf-not-found">${kit.icon('game')}<h1>${party ? 'Party over' : 'Wiped out'}</h1><p>${text}</p></div></div>`;
     return layout({ title: 'Not found', robots: 'noindex, follow', body, active: '/' });
 }
 
 module.exports = {
-    home, ride, map, watch, web, developers, notFound, runTime,
+    home, ride, map, watch, party, web, developers, notFound, runTime,
     layout,
     setRelease: layoutLib.setRelease,
     configure: layoutLib.configure,

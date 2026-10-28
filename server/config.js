@@ -57,6 +57,10 @@ function load(env = process.env) {
         gamesTimeoutMs: atLeast(env.SURF_GAMES_TIMEOUT_MS, 200, 4000),
         // Web: Actor creates a task quickly, but a cold allowance check may take a moment.
         actorTimeoutMs: atLeast(env.SURF_ACTOR_TIMEOUT_MS, 200, 15_000),
+        // Watch together: in-memory parties, hard caps 200 open parties and 50 members each. The environment may
+        // lower the caps (tests do), never raise them; the 30-minute empty TTL is fixed in watch/party.js.
+        partyMax: Math.min(200, Math.max(1, int(env.SURF_PARTY_MAX, 200))),
+        partyMemberMax: Math.min(50, Math.max(1, int(env.SURF_PARTY_MEMBER_MAX, 50))),
 
         oauth: {
             clientId: env.OV_OAUTH_CLIENT_ID || 'surf',
