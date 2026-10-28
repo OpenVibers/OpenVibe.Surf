@@ -9,7 +9,7 @@
 OpenVibe.Surf is the Surf room. One room, three surfs:
 
 - **Ride** — CS-style surf in the browser, served by OpenVibe.Games. The map catalogue is proxied from Games and
-  every map plays in an embed (`https://openvibe.games/play/surf?map=<id>&embed=1`).
+  every map plays in an embed (`https://openvibe.games/surf/embed?map=<id>&embed=1`).
 - **Watch** — lean-back channel surfing over OpenVibe.Live: live streams, clips people cut and the AI moments of
   the week, merged into one feed with one card shape.
 - **Web** — *Surf with Vibe*: tell an agent what you are looking for and it browses the web for you on a private
@@ -76,7 +76,7 @@ still carries the embed (`{ "map": { "id": … }, "top": [], "games": "not_ready
 `502 games.unavailable` problem and is never cached.
 
 Each map carries `embed_url`:
-`https://openvibe.games/play/surf?map=<id>&embed=1` (`SURF_GAMES_PUBLIC_URL`).
+`https://openvibe.games/surf/embed?map=<id>&embed=1` (`SURF_GAMES_PUBLIC_URL`).
 
 ## Web — Surf with Vibe
 

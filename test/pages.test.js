@@ -32,7 +32,7 @@ const { assetVersion } = require('../server/assets');
         assert.match(r.text, /href="\/ride\/surf_lagoon"/);
         assert.match(r.text, /Surf Lagoon/);
         assert.match(r.text, /id="sf-embed"/);
-        assert.match(r.text, /src="https:\/\/openvibe\.games\/play\/surf\?map=surf_lagoon&amp;embed=1"/);
+        assert.match(r.text, /src="https:\/\/openvibe\.games\/surf\/embed\?map=surf_lagoon&amp;embed=1"/);
         assert.strictEqual(r.headers.get('cache-control'), 'public, max-age=60');
     });
 
@@ -46,7 +46,7 @@ const { assetVersion } = require('../server/assets');
         assert.match(r.text, /1:01\.234/);
         assert.match(r.text, /id="sf-top"/);
         assert.match(r.text, /ada/);
-        assert.match(r.text, /src="https:\/\/openvibe\.games\/play\/surf\?map=surf_lagoon&amp;embed=1"/);
+        assert.match(r.text, /src="https:\/\/openvibe\.games\/surf\/embed\?map=surf_lagoon&amp;embed=1"/);
     });
 
     await check('/ride/:map still embeds when Games has not added its routes yet', async () => {
@@ -57,7 +57,7 @@ const { assetVersion } = require('../server/assets');
         t.ctx.ride.clear();
         assert.strictEqual(r.status, 200, r.text);
         assert.match(r.text, /id="sf-ride-not-ready"/);
-        assert.match(r.text, /src="https:\/\/openvibe\.games\/play\/surf\?map=surf_lagoon&amp;embed=1"/);
+        assert.match(r.text, /src="https:\/\/openvibe\.games\/surf\/embed\?map=surf_lagoon&amp;embed=1"/);
     });
 
     await check('/watch is the feed as a list with thumbnails, play links and HLS hooks', async () => {

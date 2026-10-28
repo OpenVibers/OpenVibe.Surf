@@ -77,7 +77,7 @@ function home() {
             { title: 'The API', text: 'Feeds, maps and tasks as JSON', href: '/developers', icon: 'ov:code' },
         ] },
         faq: { items: [
-            ['Do I need to install anything to ride?', 'No. The maps run in your browser on OpenVibe.Games: a keyboard and mouse (pointer lock) or a gamepad; phones get a touch ramp trainer.'],
+            ['Do I need to install anything to ride?', 'No. The maps run in your browser on OpenVibe.Games: a keyboard and mouse (pointer lock); phones get a touch ramp trainer.'],
             ['Does the agent use my accounts?', 'No. It browses on its own private desk, stops at logins and anything that would spend money, and hands over to you. Its steps and sources stay in your Actor tasks.'],
             ['What plays in Watch?', 'OpenVibe.Live: who is live now, the clips people cut and the week\'s AI moments. Live streams open on their channel; clips and moments play right here.'],
         ] },

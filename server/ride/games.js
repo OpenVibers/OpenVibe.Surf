@@ -10,9 +10,9 @@
  * that is "not ready", not an error, so the list is empty and the answer says so. A timeout or a 5xx is an
  * error (the caller answers 502); a failure is never cached, so the next request asks again.
  *
- * Every map carries `embed_url`: https://openvibe.games/play/surf?map=<id>&embed=1 (SURF_GAMES_PUBLIC_URL).
+ * Every map carries `embed_url`: https://openvibe.games/surf/embed?map=<id>&embed=1 (SURF_GAMES_PUBLIC_URL).
  */
-const EMBED_PATH = '/play/surf';
+const EMBED_PATH = '/surf/embed';   // the one Games page openvibe.surf may frame (frame-ancestors)
 
 function clean(id) {
     return String(id == null ? '' : id).trim().slice(0, 64);
