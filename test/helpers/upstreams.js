@@ -66,6 +66,8 @@ async function startUpstreams() {
         top: JSON.parse(JSON.stringify(DEFAULT_TOP)),
         gamesNotFound: false,
         gamesStatus: null,
+        liveVods: { 2: 9002 },
+        dvr: { 9002: 'https://openvibe.media/v/9002/dvr.m3u8' },
         fail: { streams: null, clips: null, moments: null },
         delay: { streams: 0, clips: 0, moments: 0 },
         actor: { status: 201, id: 'tsk_01J8SURFEXAMPLE00000000', problem: null },
@@ -91,6 +93,14 @@ async function startUpstreams() {
             if (fail('streams')) return;
             return json(200, { streams: state.streams });
         }
+        // A live stream's recording (bo records to MP4, so Media has its DVR playlist; ada and cy have none).
+        let m = p.match(/^\/api\/vods\/stream\/(\d+)\/live$/);
+        if (m) {
+            const vod = state.liveVods[m[1]];
+            return vod ? json(200, { vod: { id: vod, stream_id: Number(m[1]), is_recording: 1 } }) : json(404, { error: 'No active VOD recording' });
+        }
+        m = p.match(/^\/api\/vods\/(\d+)\/live-info$/);
+        if (m) return json(200, { id: Number(m[1]), isRecording: true, dvr_hls: state.dvr[m[1]] || null });
         if (p === '/api/content/feed') {
             state.counts.clips++;
             if (state.delay.clips) await new Promise((r) => setTimeout(r, state.delay.clips));

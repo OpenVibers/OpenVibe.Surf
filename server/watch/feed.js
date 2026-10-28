@@ -7,6 +7,9 @@
  *
  * Sources (all on OV_LIVE_INTERNAL_URL):
  *   live     GET /api/streams                                  → { streams: [...] }
+ *            GET /api/vods/stream/:id/live, /api/vods/:vod/live-info → dvr_hls: a stream that records to MP4 (RTMP,
+ *            OBS) plays in the TV over Media's growing DVR playlist, a little behind the live edge; any other stream
+ *            (a browser's WHIP stream, a private recording, a slow answer) keeps its link to the channel
  *   clips    GET /api/content/feed?type=clips&sort=new…        → { items: [...], next }
  *   moments  GET /api/content/moments?type=clips&sort=top…     → { items: [...], next }
  *
@@ -21,6 +24,7 @@
 const DEFAULT_TOPIC = 'all';
 const TOPICS = ['all', 'live', 'clips', 'moments'];
 const SOURCE_NAMES = ['live', 'clips', 'moments'];
+const LIVE_DVR_MAX = 6;
 const CLIP_PATH = '/api/content/feed';
 const MOMENT_PATH = '/api/content/moments';
 
@@ -188,10 +192,22 @@ function createWatchFeed({ config, fetchImpl = globalThis.fetch, log = console, 
         return data;
     }
 
+    /** The live stream's DVR playlist on Media, or null (never an error: the card then links to the channel). */
+    async function dvrOf(streamId) {
+        if (!Number.isSafeInteger(streamId) || streamId <= 0) return null;
+        try {
+            const live = await getJson(`/api/vods/stream/${streamId}/live`);
+            const vodId = Number(live && live.vod && live.vod.id);
+            if (!Number.isSafeInteger(vodId) || vodId <= 0) return null;
+            const info = await getJson(`/api/vods/${vodId}/live-info`);
+            return mediaUrl(info && info.dvr_hls);
+        } catch { return null; }
+    }
+
     async function loadLive() {
         const data = await getJson('/api/streams');
-        const streams = Array.isArray(data.streams) ? data.streams : [];
-        const items = streams.filter((s) => s && typeof s.username === 'string' && s.username).map((s) => {
+        const streams = (Array.isArray(data.streams) ? data.streams : []).filter((s) => s && typeof s.username === 'string' && s.username);
+        const items = streams.map((s) => {
             const viewers = num(s.total_viewer_count != null ? s.total_viewer_count : (s.viewer_count != null ? s.viewer_count : s.viewers));
             return {
                 key: `live:${s.username}`,
@@ -206,6 +222,12 @@ function createWatchFeed({ config, fetchImpl = globalThis.fetch, log = console, 
                 created_at: s.started_at || null,
             };
         });
+        // The busiest LIVE_DVR_MAX streams are asked for their playlist, side by side (each call has the source timeout).
+        const busiest = items.map((it, i) => [it, Number(streams[i].id)]).sort((a, b) => b[0].viewers - a[0].viewers).slice(0, LIVE_DVR_MAX);
+        await Promise.all(busiest.map(async ([it, id]) => {
+            const src = await dvrOf(id);
+            if (src) { it.play = { type: 'hls', src, page: it.play.page }; it.why = `${it.why} · a little behind live`; }
+        }));
         return { items, next: null };
     }
 

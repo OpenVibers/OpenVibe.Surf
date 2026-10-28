@@ -108,7 +108,7 @@ its status and prints its words. It is `private, no-store`; a `GET /web/go` star
 | `/` | the Surf room: the run motif (ramps, speed lines, a ticking timer), the three tiles under the hero, scenes, questions |
 | `/ride` | the maps with tier, stages, runs and the record, and the embed of the first map |
 | `/ride/:map` | one map: name, tier, stages, records if Games answers, the embed |
-| `/watch` | the TV: the screen plays clips and moments in the page (HLS), the guide lists every channel; ↑ ↓, a swipe or a tap changes channel; live streams open on their channel |
+| `/watch` | the TV: the screen plays clips and moments in the page (HLS), the guide lists every channel; ↑ ↓, a swipe or a tap changes channel; a live stream that records to MP4 plays over Media's DVR playlist, a little behind live, and any other opens on its channel |
 | `/web` | the Surf with Vibe form, examples, and what happens next |
 | `/developers` | the API, for people and agents |
 | anything else | the 404 page |

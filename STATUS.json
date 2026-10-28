@@ -31,7 +31,7 @@
   ],
   "notYet": [
     "OpenVibe.Games' surf mode and GET /api/surf/maps: until they ship, Ride answers games: 'not_ready' and the page says the maps are being built",
-    "Live streams in the Watch TV itself: they open on their channel until a Live embed player exists"
+    "A browser (WHIP) live stream in the TV: it has no DVR playlist yet, so it opens on its channel; watch together"
   ],
   "capabilitiesRegistered": false,
   "serviceManifestRegistered": true,

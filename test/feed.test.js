@@ -32,11 +32,12 @@ const channels = (feed) => feed.items.map((i) => i.channel.username);
         }
         const live = b.items[0];
         assert.strictEqual(live.key, 'live:bo');
-        assert.strictEqual(live.play.type, 'live');
-        assert.strictEqual(live.play.src, null);
-        assert.strictEqual(live.play.page, 'https://openvibe.live/@bo');
+        assert.deepStrictEqual(live.play, { type: 'hls', src: 'https://openvibe.media/v/9002/dvr.m3u8', page: 'https://openvibe.live/@bo' },
+            'a stream that records to MP4 plays in the TV over Media\'s DVR playlist');
+        const ada = b.items.find((i) => i.key === 'live:ada');
+        assert.deepStrictEqual(ada.play, { type: 'live', src: null, page: 'https://openvibe.live/@ada' }, 'no recording: the card links to the channel');
         assert.strictEqual(live.viewers, 38);
-        assert.strictEqual(live.why, 'Live now · 38 watching');
+        assert.strictEqual(live.why, 'Live now · 38 watching · a little behind live', 'the DVR playlist runs behind the live edge, and says so');
         const moment = b.items.find((i) => i.kind === 'moment');
         assert.strictEqual(moment.play.type, 'hls');
         assert.strictEqual(moment.play.src, 'https://openvibe.media/c/201/master.m3u8');
