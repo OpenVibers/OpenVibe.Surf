@@ -221,3 +221,9 @@ Reporting a vulnerability: [SECURITY.md](SECURITY.md).
 
 Part of the [OpenVibe network](https://openvibe.network). Built in the open by
 [OpenVibers](https://github.com/OpenVibers).
+
+<!-- versions:start -->
+- openvibe-contracts: v0.232.0
+- openvibe-sdk: v0.70.0
+- openvibe-shared: v4.33.0
+<!-- versions:end -->
