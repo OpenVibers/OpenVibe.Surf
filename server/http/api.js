@@ -107,6 +107,12 @@ function createApi(ctx) {
         }
     });
 
+    r.get('/v1/web/tasks/:id', requireToken, async (req, res) => {
+        try { return res.json(await web.task({ token: req.webToken, id: req.params.id })); }
+        catch (err) { return problem(req, res, err.status || 502, 'web.task.unavailable', err.message); }
+    });
+    r.get('/v1/web/tasks/:id/events', requireToken, (req, res) => web.events({ token: req.webToken, id: req.params.id, after: req.get('last-event-id'), res }));
+
     return r;
 }
 

@@ -354,7 +354,83 @@
         });
     }
 
-    function run() { runMotif(); tv(); webForm(); }
+    function webTask() {
+        var root = document.querySelector('[data-sf-desk-task]');
+        if (!root || root.dataset.ready) return;
+        root.dataset.ready = '1';
+        var id = root.getAttribute('data-sf-desk-task');
+        var base = '/api/v1/web/tasks/' + encodeURIComponent(id);
+        var steps = root.querySelector('[data-sf-desk-steps]');
+        var seen = {};
+        var timer = null;
+        var stream = null;
+        function safeUrl(value) {
+            try { var u = new URL(value); return /^https?:$/.test(u.protocol) ? u.href : null; } catch (_) { return null; }
+        }
+        function botDesk(value) {
+            var u = safeUrl(value);
+            return u && new URL(u).origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(new URL(u).pathname) ? u : null;
+        }
+        function snapshot(t) {
+            root.querySelector('[data-sf-desk-state]').textContent = t.state || 'Working';
+            var desk = botDesk(t.desk && t.desk.url);
+            root.querySelector('[data-sf-desk-note]').textContent = desk ? 'Your agent is working on its private desk. Open the live viewer to watch or take over.' : 'The agent has not opened a desk, or its desk has ended.';
+            var links = root.querySelector('[data-sf-desk-links]');
+            links.hidden = !desk;
+            if (desk) {
+                root.querySelector('[data-sf-desk-watch]').href = desk;
+                root.querySelector('[data-sf-desk-takeover]').href = desk;
+            }
+            var needs = root.querySelector('[data-sf-desk-needs]');
+            needs.hidden = !t.needs_you;
+            needs.textContent = t.needs_you && t.needs_you.what || '';
+            var list = root.querySelector('[data-sf-desk-sources]');
+            list.replaceChildren();
+            var sources = t.result && Array.isArray(t.result.sources) ? t.result.sources : [];
+            sources.forEach(function (value) {
+                var url = safeUrl(value);
+                if (!url) return;
+                var li = document.createElement('li'), a = document.createElement('a');
+                a.href = url; a.textContent = url; a.target = '_blank'; a.rel = 'nofollow noopener noreferrer';
+                li.appendChild(a); list.appendChild(li);
+            });
+            root.querySelector('[data-sf-desk-sources-empty]').hidden = !!list.children.length;
+            var answer = t.result && typeof t.result.answer === 'string' ? t.result.answer : '';
+            root.querySelector('[data-sf-desk-report]').textContent = answer;
+            root.querySelector('[data-sf-desk-report-empty]').hidden = !!answer;
+            if (!['queued', 'running', 'verifying'].includes(t.state)) {
+                if (timer) clearInterval(timer);
+                if (stream) stream.close();
+                root.setAttribute('data-sf-desk-open', '0'); root.querySelector('[data-sf-desk-steps-note]').textContent = 'The task has ended.';
+            }
+        }
+        function refresh() {
+            fetch(base, { credentials: 'same-origin', headers: { accept: 'application/json' } })
+                .then(function (r) { if (!r.ok) throw new Error('Task unavailable'); return r.json(); })
+                .then(snapshot)
+                .catch(function () { root.querySelector('[data-sf-desk-steps-note]').textContent = 'Connection lost. Trying again…'; });
+        }
+        function step(e) {
+            try {
+                var item = JSON.parse(e.data);
+                if (item.kind === 'end') { if (stream) stream.close(); refresh(); return; }
+                if (item.kind !== 'output' || seen[item.seq]) return;
+                seen[item.seq] = true;
+                var line = document.createElement('li');
+                line.className = 'sf-desk-step';
+                line.textContent = [item.step === 'tool_call' ? 'Used ' + (item.tool || 'a tool') : item.step === 'tool_result' ? 'Evidence' : 'Step', item.text || item.input || ''].filter(Boolean).join(': ').slice(0, 1000);
+                steps.appendChild(line);
+                root.querySelector('[data-sf-desk-steps-note]').textContent = 'Updating live as the agent works.';
+            } catch (_) { /* ignore a malformed event */ }
+        }
+        if (window.EventSource) {
+            stream = new EventSource(base + '/events');
+            ['output', 'state', 'end'].forEach(function (name) { stream.addEventListener(name, step); });
+        } else root.querySelector('[data-sf-desk-steps-note]').textContent = 'Open the full task in Actor to see its steps.';
+        if (root.getAttribute('data-sf-desk-open') === '1') timer = setInterval(refresh, 3000);
+    }
+
+    function run() { runMotif(); tv(); webForm(); webTask(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
     document.addEventListener('ov:boost:load', run);
 })();

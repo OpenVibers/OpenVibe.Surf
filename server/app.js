@@ -3,7 +3,7 @@
 /**
  * OpenVibe.Surf — Express app factory; server/index.js listens, tests build their own instance with mock upstreams.
  *
- *   /, /ride, /ride/:map, /watch, /web, /developers   the pages (http/pages.js)
+ *   /, /ride, /ride/:map, /watch, /web, /web/t/:taskId, /developers   the pages (http/pages.js)
  *   /watch/party, /watch/p/:id, …/events              watch together (http/party.js)
  *   /web/go                                           the no-JavaScript task form
  *   /api/v1/watch/feed, /api/v1/ride/maps…            Watch and Ride (http/api.js)

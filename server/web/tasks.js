@@ -21,6 +21,7 @@ const crypto = require('crypto');
 const MIN_QUERY = 3;
 const MAX_QUERY = 500;
 const IDEMPOTENCY = /^[A-Za-z0-9._:-]{8,128}$/;
+const TASK_ID = /^tsk_[A-Za-z0-9]{8,64}$/;
 const PREFIX = 'Surf the web for me with your tools. Use search_web to find pages, read_page to read them, and a desk when a page needs one. Keep every source you use and finish with a short report that cites each source.';
 
 function validQuery(value) {
@@ -39,8 +40,53 @@ function newIdempotencyKey() {
 }
 
 function createWeb({ config, fetchImpl = globalThis.fetch, log = console }) {
+    const taskPath = (id) => `${config.actorInternalUrl}/api/v1/tasks/${encodeURIComponent(id)}`;
+    const headers = (token) => ({ Accept: 'application/json', Authorization: `Bearer ${token}` });
+
+    async function task({ token, id }) {
+        if (!token) throw Object.assign(new Error('Sign in to see your task.'), { status: 401 });
+        if (!TASK_ID.test(String(id || ''))) throw Object.assign(new Error('Task not found.'), { status: 404 });
+        let res;
+        try {
+            res = await fetchImpl(taskPath(id), { headers: headers(token), signal: AbortSignal.timeout(config.actorTimeoutMs || 15_000) });
+        } catch {
+            throw Object.assign(new Error('OpenVibe.Actor did not answer.'), { status: 502 });
+        }
+        if (!res.ok) throw Object.assign(new Error(res.status === 404 || res.status === 403 ? 'Task not found.' : 'OpenVibe.Actor did not answer.'), { status: res.status === 401 ? 401 : res.status === 403 || res.status === 404 ? 404 : 502 });
+        let data;
+        try { data = await res.json(); } catch { /* invalid Actor response */ }
+        if (!data || data.id !== id) throw Object.assign(new Error('OpenVibe.Actor sent an invalid task.'), { status: 502 });
+        return data;
+    }
+
+    // Actor offers SSE. Proxy it server-side so the person's token stays in an httpOnly cookie and never enters JS.
+    async function events({ token, id, after, res }) {
+        if (!token) return res.status(401).end();
+        if (!TASK_ID.test(String(id || ''))) return res.status(404).end();
+        const controller = new AbortController();
+        res.on('close', () => controller.abort());
+        let upstream;
+        try {
+            upstream = await fetchImpl(`${taskPath(id)}/events`, {
+                headers: { ...headers(token), Accept: 'text/event-stream', ...(after && /^\d{1,12}$/.test(after) ? { 'Last-Event-ID': after } : {}) }, signal: controller.signal,
+            });
+            if (!upstream.ok || !upstream.body) return res.status(upstream.status === 401 ? 401 : upstream.status === 403 || upstream.status === 404 ? 404 : 502).end();
+            res.status(200).set({ 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Accel-Buffering': 'no' });
+            for await (const chunk of upstream.body) {
+                if (res.destroyed) break;
+                res.write(chunk);
+            }
+            res.end();
+        } catch (err) {
+            if (!controller.signal.aborted) {
+                log.warn('[OpenVibe.Surf] Actor event stream ended:', (err && err.message) || err);
+                if (!res.headersSent) res.status(502);
+                res.end();
+            }
+        }
+    }
     /**
-     * Create one task for the person whose token this is. Resolves { task_id, page } or throws
+     * Create one task for the person whose token this is. Resolves { task_id, page } (Surf's task page) or throws
      * { status, code, detail, actor } — a 4xx from Actor keeps its status and detail.
      */
     async function createTask({ token, query, idempotencyKey = null } = {}) {
@@ -84,10 +130,10 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console }) {
             log.warn('[OpenVibe.Surf] Actor answered without a task id');
             throw Object.assign(new Error('OpenVibe.Actor answered without a task id.'), { status: 502, code: 'actor.invalid_response' });
         }
-        return { task_id: id, page: `${String(config.actorPublicUrl).replace(/\/+$/, '')}/tasks/${encodeURIComponent(id)}` };
+        return { task_id: id, page: `/web/t/${encodeURIComponent(id)}` };
     }
 
-    return { createTask, validQuery };
+    return { createTask, task, events, validQuery };
 }
 
-module.exports = { createWeb, taskText, validQuery, newIdempotencyKey, PREFIX, MIN_QUERY, MAX_QUERY };
+module.exports = { createWeb, taskText, validQuery, newIdempotencyKey, PREFIX, MIN_QUERY, MAX_QUERY, TASK_ID };

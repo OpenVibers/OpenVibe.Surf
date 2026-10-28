@@ -248,12 +248,46 @@ function web({ me = {}, query = '' } = {}) {
     return layout({ title: 'Surf with Vibe', description: 'Ask an agent to surf the web for you: it searches, reads pages on a private desk when needed, keeps its sources and reports back with citations.', path: '/web', body, active: '/web' });
 }
 
+const safeWebUrl = (value) => {
+    try {
+        const u = new URL(String(value));
+        return /^https?:$/.test(u.protocol) ? u.href : null;
+    } catch { return null; }
+};
+const deskUrl = (value) => {
+    const url = safeWebUrl(value);
+    return url && new URL(url).origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(new URL(url).pathname) ? url : null;
+};
+
+function webTask({ task, actorUrl } = {}) {
+    const id = String(task.id);
+    const actor = `${String(actorUrl).replace(/\/+$/, '')}/tasks/${encodeURIComponent(id)}`;
+    const desk = deskUrl(task.desk && task.desk.url);
+    const sources = task.result && Array.isArray(task.result.sources) ? task.result.sources.map(safeWebUrl).filter(Boolean) : [];
+    const report = task.result && typeof task.result.answer === 'string' ? task.result.answer : '';
+    const body = `<div class="sf-wrap sf-page-pad sf-narrow sf-desk-page" data-sf-desk-task="${esc(id)}" data-sf-desk-open="${['queued', 'running', 'verifying'].includes(task.state) ? '1' : '0'}">
+<header class="sf-page-h sf-desk-head"><p class="sf-kicker">Web · Surf with Vibe</p><h1>Surf report</h1><p class="sf-desk-query">${esc(task.task || 'Your web task')}</p><p class="sf-desk-state" data-sf-desk-state role="status">${esc(task.state || 'queued')}</p></header>
+<section class="sf-card sf-desk-view" aria-labelledby="sf-desk-view-h"><h2 id="sf-desk-view-h">Agent desk</h2><p data-sf-desk-note>${desk ? 'Your agent is working on its private desk. Open the live viewer to watch or take over.' : 'The agent has not opened a desk, or its desk has ended.'}</p>
+<p data-sf-desk-links${desk ? '' : ' hidden'}><a class="sf-desk-watch" data-sf-desk-watch href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Watch live</a> · <a class="sf-desk-takeover" data-sf-desk-takeover href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Take over</a></p><p data-sf-desk-needs${task.needs_you ? '' : ' hidden'}>${esc(task.needs_you && task.needs_you.what || '')}</p></section>
+<section class="sf-card sf-desk-steps" aria-labelledby="sf-desk-steps-h"><h2 id="sf-desk-steps-h">Live steps</h2><ol data-sf-desk-steps></ol><p class="sf-fine" data-sf-desk-steps-note>Connecting to the agent’s live steps…</p></section>
+<section class="sf-card sf-desk-evidence" aria-labelledby="sf-desk-evidence-h"><h2 id="sf-desk-evidence-h">Sources cited</h2><ul data-sf-desk-sources>${sources.map((url) => `<li><a href="${esc(url)}" target="_blank" rel="nofollow noopener noreferrer">${esc(url)}</a></li>`).join('')}</ul><p data-sf-desk-sources-empty${sources.length ? ' hidden' : ''}>Sources will appear when the report is ready.</p></section>
+<section class="sf-card sf-desk-report" aria-labelledby="sf-desk-report-h"><h2 id="sf-desk-report-h">Final report</h2><div class="sf-desk-report-text" data-sf-desk-report>${esc(report)}</div><p data-sf-desk-report-empty${report ? ' hidden' : ''}>The agent is still working.</p></section>
+<p class="sf-fine sf-desk-actor"><a href="${esc(actor)}" target="_blank" rel="noopener noreferrer">Open full task in Actor</a> · <a href="/web">Start another surf</a></p></div>`;
+    return layout({ title: 'Surf report', path: `/web/t/${encodeURIComponent(id)}`, robots: 'noindex, nofollow', body, active: '/web' });
+}
+
+function webTaskError({ notFound = false } = {}) {
+    return layout({ title: 'Surf task', path: '/web', robots: 'noindex, nofollow', body: `<div class="sf-wrap sf-page-pad sf-narrow"><h1>${notFound ? 'Task not found' : 'The task is unavailable'}</h1><p>${notFound ? 'This task is unavailable to your account.' : 'Actor did not answer. Try this page again in a moment.'}</p><p><a href="/web">Back to Surf with Vibe</a></p></div>`, active: '/web' });
+}
+
 function developers() {
     const rows = [
         ['GET /api/v1/watch/feed?topic=all|live|clips|moments&amp;cursor=', 'The merged OpenVibe.Live feed: who is live (by viewers), then clips and AI moments by freshness, never two from one channel in a row. Each item says why it is on. Cached 30 s; a source that did not answer is named in <code>sources</code>.'],
         ['GET /api/v1/ride/maps', 'The surf maps from OpenVibe.Games: id, name, tier, stages, author, runs, the record. Cached 60 s.'],
         ['GET /api/v1/ride/maps/:id', 'One map, its fastest runs and its <code>embed_url</code>.'],
-        ['POST /api/v1/web/tasks', 'Signed in, from this site: <code>{ query }</code> (3–500 characters) starts an OpenVibe.Actor task as you and answers <code>{ task_id, page }</code>.'],
+        ['POST /api/v1/web/tasks', 'Signed in, from this site: <code>{ query }</code> (3–500 characters) starts an OpenVibe.Actor task as you and answers <code>{ task_id, page }</code>; the page is in Surf.'],
+        ['GET /api/v1/web/tasks/:id', 'Your Actor task state, desk link, sources and final report, fetched with your token.'],
+        ['GET /api/v1/web/tasks/:id/events', 'Your live Actor steps as server-sent events.'],
         ['POST /watch/party · GET /watch/p/:id/events', 'Watch together: signed in and same-site, opens an in-memory party at <code>/watch/p/&lt;id&gt;</code> (303, or 201 JSON). The SSE stream carries the host\'s <code>{ channel_key, position_s, playing, at }</code> commands to every member; a restart ends the party.'],
     ];
     const body = `<div class="sf-wrap sf-page-pad">
@@ -273,7 +307,7 @@ function notFound({ party = false } = {}) {
 }
 
 module.exports = {
-    home, ride, map, watch, party, web, developers, notFound, runTime,
+    home, ride, map, watch, party, web, webTask, webTaskError, developers, notFound, runTime,
     layout,
     setRelease: layoutLib.setRelease,
     configure: layoutLib.configure,
