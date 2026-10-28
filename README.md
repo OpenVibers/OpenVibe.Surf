@@ -96,26 +96,28 @@ form does not start a second task. The answer is `{ "task_id": "tsk_…", "page"
 (201, `Location` set). Actor's 4xx refusal (401, 403, 429 allowance/budget, 422) keeps its status and its words;
 an Actor that does not answer is a `502 actor.unavailable`.
 
-`GET /web/go?q=…` is the same task as a plain form for no-JavaScript: it creates the task and **303**s to the
-Actor task page. A guest is sent to sign in; a bad query is a 400; an Actor refusal keeps its status and prints
-its words. It is `private, no-store`.
+`POST /web/go` (form field `q`) is the same task as a plain form for no-JavaScript: it creates the task and
+**303**s to the Actor task page, so the question is never in a URL. It is refused from another site (Origin or
+Sec-Fetch-Site), a guest is sent to sign in, a bad query is a 400 with the form again, and an Actor refusal keeps
+its status and prints its words. It is `private, no-store`; a `GET /web/go` starts nothing and goes back to `/web`.
 
 ## Pages
 
 | Route | What it is |
 |---|---|
-| `/` | the front door: three tiles, Ride, Web, Watch |
-| `/ride` | the maps list and the embed of the first map |
+| `/` | the Surf room: the run motif (ramps, speed lines, a ticking timer), the three tiles under the hero, scenes, questions |
+| `/ride` | the maps with tier, stages, runs and the record, and the embed of the first map |
 | `/ride/:map` | one map: name, tier, stages, records if Games answers, the embed |
-| `/watch` | the feed as a list with each item's thumbnail and a play link; data hooks for the HLS `<video>` |
-| `/web` | the Surf with Vibe form and what it does |
+| `/watch` | the TV: the screen plays clips and moments in the page (HLS), the guide lists every channel; ↑ ↓, a swipe or a tap changes channel; live streams open on their channel |
+| `/web` | the Surf with Vibe form, examples, and what happens next |
 | `/developers` | the API, for people and agents |
 | anything else | the 404 page |
 
 All of them are server-rendered through the OpenVibe Frame (`openvibe-shared/shell`) and readable without
 JavaScript, with stable `sf-` ids and classes. A page rendered for a signed-in person is `private, no-store`; a
-public page is `public, max-age=60` with `Vary: Cookie`. `public/css/surf.css` and `public/js/surf.js` are
-one-comment placeholders: the main session designs them and adds the HLS player.
+public page is `public, max-age=60` with `Vary: Cookie`. `public/js/surf.js` adds what the pages are complete
+without: the TV (native HLS, else `/vendor/hls.light.min.js` 1.7.3, loaded only then), the Web form in the page and
+the home timer; everything works without it.
 
 ## API
 
@@ -125,7 +127,7 @@ one-comment placeholders: the main session designs them and adds the HLS player.
 | `GET /api/v1/ride/maps` | none | `public, max-age=60` | the Games surf map catalogue |
 | `GET /api/v1/ride/maps/:id` | none | `public, max-age=60` | one map and its fastest runs |
 | `POST /api/v1/web/tasks` | cookie + Origin | `private, no-store` | create one Actor task as the person |
-| `GET /web/go` | cookie | `private, no-store` | the no-JavaScript task form, 303 to Actor |
+| `POST /web/go` | cookie, this site only | `private, no-store` | the no-JavaScript task form, 303 to Actor |
 
 Errors are RFC 9457 `application/problem+json`. A blank map id is 400; a bad Watch topic or cursor is 400. The
 only outbound person token is the `Authorization: Bearer` on the request to Actor.

@@ -24,12 +24,12 @@ The service skeleton: three surfs, one room.
   same-origin request creates one OpenVibe.Actor task with the person's own Network token from `surf_at` as a
   Bearer, an `Idempotency-Key`, and a short browsing brief (search_web, read_page, a desk when a page needs one,
   keep sources, finish with a cited report). Answers `{ task_id, page }`; Actor's 4xx refusal keeps its status
-  and words. `/web/go` is the same task as a no-JavaScript form that 303s to the Actor task page.
+  and words. `POST /web/go` is the same task as a no-JavaScript form (this site only) that 303s to the Actor task page.
 - **Pages** (`server/http/pages.js`, `server/views/index.js`): `/`, `/ride`, `/ride/:map`, `/watch`, `/web`,
   `/developers` and a 404, all server-rendered through the OpenVibe Frame and complete without JavaScript, with
   stable `sf-` ids and classes. Public pages are `public, max-age=60` with `Vary: Cookie`; a page rendered for a
-  signed-in person is `private, no-store`. `public/css/surf.css` and `public/js/surf.js` are one-comment
-  placeholders for the main session.
+  signed-in person is `private, no-store`. The room is designed: the run motif and three tiles on the home page, the
+  Watch TV with its guide (clips and moments play in the page over HLS), the maps, and the Web form.
 - **Plumbing** (`server/app.js`): helmet with the network's CSP (the Games embed, a possible Live player, the
   media edge for HLS), content-hashed `/css` and `/js`, `/api/health`, `/api/ready` (degraded, never 503, when an
   optional upstream is down), `/release.json`, `/release-metrics`, `/shared/*`, `/robots.txt`, `/sitemap.xml` and
