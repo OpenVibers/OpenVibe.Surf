@@ -14,6 +14,7 @@
  */
 const layoutLib = require('../render/layout');
 const kit = require('openvibe-shared/kit');
+const S = require('./short');
 const sc = require('openvibe-shared/showcase');
 const rooms = require('openvibe-shared/rooms');
 
@@ -83,8 +84,14 @@ function home() {
         ] },
     });
     const at = room.indexOf('<section class="sc-room-scenes"');
-    const body = at < 0 ? room.replace(/<\/div>$/, `${tiles}</div>`) : room.slice(0, at) + tiles + room.slice(at);
-    return layout({ title: null, path: '/', body: `<div class="sf-wrap">${body}</div>`, active: '/' });
+    let body = at < 0 ? room.replace(/<\/div>$/, `${tiles}</div>`) : room.slice(0, at) + tiles + room.slice(at);
+    // The home on a phone (the owner's short-pages rule, 2026-10-30): the three scenes are chips, one at a time, and
+    // the questions are a fold. Both stay in the page for the crawlers.
+    body = S.pickScenes(body, { key: 'scenes', label: 'What you can do', head: 'What you can do', labels: ['Ride maps', 'Surf the web', 'Watch'] });
+    body = S.foldSection(body, 'id="sc-questions"', 'questions-fold');
+    // The rule that shows the picked scene: one per scene, so the CSS is written for this page.
+    const rules = `@supports selector(:has(*)){@media (max-width:640px){${S.pickRules('scenes', ['scene-0', 'scene-1', 'scene-2'])}}}`;
+    return layout({ title: null, path: '/', body: `<div class="sf-wrap">${body}</div>`, active: '/', inlineStyles: [rules] });
 }
 
 function mapCard(m) {

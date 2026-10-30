@@ -38,7 +38,7 @@ const baseUrl = () => BASE;
 const canonical = (p) => `${BASE}${p || '/'}`;
 
 /** The page around a body: the shared shell with the room's stylesheets and behaviour. */
-function layout({ title, description, canonical, path, robots = 'index, follow', body, active = '/', scripts = ['js/surf.js'], jsonLd = [] } = {}) {
+function layout({ title, description, canonical, path, robots = 'index, follow', body, active = '/', scripts = ['js/surf.js'], jsonLd = [], inlineStyles = [] } = {}) {
     const pathNow = path || active || '/';
     canonical = canonical || (path ? `${BASE}${path}` : undefined);
     const navbar = {
@@ -76,6 +76,7 @@ function layout({ title, description, canonical, path, robots = 'index, follow',
 <script src="${esc(ovServe.url('kit-web.js'))}" defer></script>
 <script src="${esc(ovServe.url('motion.js'))}" defer></script>
 ${(scripts || []).map((rel) => `<script src="${esc(asset(rel))}" defer></script>`).join('\n')}
+${(inlineStyles || []).map((css) => `<style>${css}</style>`).join('\n')}
 <meta name="ov-boost" content="surf@${esc(RELEASE)}">`,
         body: `<a class="skip" href="#main">Skip to content</a>
 <div id="navbar-mount"></div>
