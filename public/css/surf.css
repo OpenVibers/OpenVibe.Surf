@@ -249,3 +249,12 @@ html.ov-motion .sf-party-playing .sf-party-dot { animation: sf-pulse 1.6s ease-o
 .sf-desk-actor { margin: 4px 0 0; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .sf-desk-page[data-sf-desk-open="1"] .sf-desk-state::before { animation: none; } }
 html[data-ov-motion=reduced] .sf-desk-page[data-sf-desk-open="1"] .sf-desk-state::before { animation: none; }
+
+/* Touch targets on phones (fleet audit 2026-10-29): the touch-only hit area for this group. Nothing moves with a mouse. */
+@media (pointer: coarse) {
+  /* The hero's chips: a finger needs a 44px tall pill. */
+  .sc-room-chips a { min-height: 44px; display: inline-flex; align-items: center; }
+  /* The scene card's own link: a vertical-only hit area, the width stays as it is. */
+  a.sc-scene-go { position: relative; }
+  a.sc-scene-go::after { content: ''; position: absolute; left: 0; right: 0; top: -2px; bottom: -2px; }
+}
