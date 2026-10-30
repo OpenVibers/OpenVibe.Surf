@@ -70,7 +70,10 @@ async function startNetwork() {
         if (url.pathname === '/api/.well-known/jwks') return json(200, { public_key: publicPem, algorithm: 'RS256' });
         if (url.pathname === '/oauth/revoke') return json(200, {});
         if (url.pathname === '/oauth/token' && req.method === 'POST') {
-            const form = Object.fromEntries(new URLSearchParams(text));
+            // The SDK sends application/json; the site's old module sent a form. Accept both.
+            const form = String(req.headers['content-type'] || '').includes('json')
+                ? (() => { try { return JSON.parse(text) || {}; } catch { return {}; } })()
+                : Object.fromEntries(new URLSearchParams(text));
             st.tokenRequests.push(form);
             if (form.client_id !== 'surf' || form.client_secret !== 'surf-secret') return json(401, { error: 'invalid_client', error_description: 'bad client secret' });
             if (form.grant_type === 'authorization_code') {
