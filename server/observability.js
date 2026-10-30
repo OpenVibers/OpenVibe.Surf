@@ -15,7 +15,7 @@
  */
 const { createReadiness } = require('openvibe-shared/ready');
 
-function createServiceReadiness({ config, feed, ride, keys = null, release = null, fetchImpl = globalThis.fetch }) {
+function createServiceReadiness({ config, feed, ride, keys = null, release = null, fetchImpl = globalThis.fetch, sso = null }) {
     return createReadiness({
         service: 'surf',
         release,
@@ -41,7 +41,17 @@ function createServiceReadiness({ config, feed, ride, keys = null, release = nul
                 required: false,
                 check: () => (keys && keys.loaded() ? true : 'Network signing key not loaded yet: sign-in is unavailable'),
             },
-            { name: 'oauth_client', required: false, check: () => (config.oauth.clientSecret ? true : 'OV_OAUTH_CLIENT_SECRET unset: sign-in cannot complete') },
+            {
+                name: 'oauth_client', required: true,
+                check: async () => {
+                    if (!config.oauth.clientSecret) return 'OV_OAUTH_CLIENT_SECRET unset: sign-in cannot complete';
+                    if (!sso) return true;
+                    // 'invalid': the Network refuses this client, so a deploy with a wrong secret fails at once.
+                    // 'unknown' (the Network did not answer the probe) leaves readiness alone.
+                    const client = await sso.client.checkClient();
+                    return client === 'invalid' ? 'the Network refuses this OAuth client: check OV_OAUTH_CLIENT_ID / OV_OAUTH_CLIENT_SECRET' : true;
+                },
+            },
             { name: 'live', required: false, check: () => feed.probe() },
             { name: 'games', required: false, check: () => ride.probe() },
             {

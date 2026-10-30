@@ -81,7 +81,7 @@ function createApp(opts = {}) {
 
     // ── Machine endpoints ───────────────────────────────────
     app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'openvibe-surf', version: VERSION }));
-    const readiness = createServiceReadiness({ config, feed, ride, keys, release: release.release, fetchImpl });
+    const readiness = createServiceReadiness({ config, feed, ride, keys, release: release.release, fetchImpl, sso });
     app.get('/api/ready', readiness.handler);
 
     app.use(contracts.http.middleware());
