@@ -43,7 +43,7 @@ const { boot, check, done } = require('./helpers/boot');
         await check('the questions are a fold, open in the page and closed on a phone', async () => {
             const r = await t.get('/');
             assert.ok(r.text.includes('<details class="hm-fold hm-fold-block" id="questions-fold" open>'), 'the questions are a fold, open in the page');
-            assert.ok(r.text.includes('document.getElementById("questions-fold")'), 'the fold has the script that closes it on a phone');
+            assert.ok(!r.text.includes('document.getElementById("questions-fold")'), 'the fold is never closed by script');
             assert.match(r.text, /Do I need to install anything to ride\?/);
         });
     } finally {
