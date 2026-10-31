@@ -10,11 +10,11 @@
   "domain": "openvibe.surf",
   "contracts": "openvibe-contracts v0.232.0",
   "sdk": "openvibe-sdk v0.73.0",
-  "shared": "openvibe-shared v4.64.0",
+  "shared": "openvibe-shared v4.66.0",
   "packages": [
     "openvibe-contracts v0.232.0",
     "openvibe-sdk v0.73.0",
-    "openvibe-shared v4.64.0"
+    "openvibe-shared v4.66.0"
   ],
   "summary": "openvibe.surf, the Surf room: Network sign-in as OAuth client `surf`; Ride (OpenVibe.Games' surf maps, cached 60 s, embedded); Watch (a lean-back TV over OpenVibe.Live's live streams, clips and AI moments, clips and moments playing in the page over HLS) plus watch together (in-memory SSE parties); Web (Surf with Vibe: one OpenVibe.Actor task made with the person's own Network token). No database.",
   "works": [
