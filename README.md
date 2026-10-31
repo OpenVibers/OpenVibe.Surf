@@ -260,5 +260,5 @@ Part of the [OpenVibe network](https://openvibe.network). Built in the open by
 <!-- versions:start -->
 - openvibe-contracts: v0.232.0
 - openvibe-sdk: v0.73.0
-- openvibe-shared: v4.66.0
+- openvibe-shared: v4.67.0
 <!-- versions:end -->
