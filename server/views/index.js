@@ -14,6 +14,7 @@
  */
 const layoutLib = require('../render/layout');
 const kit = require('openvibe-shared/kit');
+const seo = require('openvibe-shared/seo');
 const S = require('./short');
 const sc = require('openvibe-shared/showcase');
 const rooms = require('openvibe-shared/rooms');
@@ -91,7 +92,7 @@ function home() {
     body = S.foldSection(body, 'id="sc-questions"', 'questions-fold');
     // The rule that shows the picked scene: one per scene, so the CSS is written for this page.
     const rules = `@supports selector(:has(*)){@media (max-width:640px){${S.pickRules('scenes', ['scene-0', 'scene-1', 'scene-2'])}}}`;
-    return layout({ title: null, path: '/', body: `<div class="sf-wrap">${body}</div>`, active: '/', inlineStyles: [rules] });
+    return layout({ title: null, path: '/', body: `<div class="sf-wrap">${body}</div>`, active: '/', jsonLd: [seo.jsonLd.website({ name: 'OpenVibe.Surf', url: 'https://openvibe.surf/', description: 'Ride CS-style surf maps in the browser, surf what is live on OpenVibe.Live, and let an agent browse the web for you.' }), seo.jsonLd.organization()], inlineStyles: [rules] });
 }
 
 function mapCard(m) {
