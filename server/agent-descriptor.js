@@ -9,6 +9,7 @@ module.exports = {
     site: "openvibe.surf",
     api: "/api/v1",
     docs: "/developers",
+    openapi: '/openapi.json',
     policy: {
         auth: ["none"],
     },
