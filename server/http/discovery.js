@@ -59,8 +59,8 @@ function createDiscoveryRoutes(ctx) {
             + seo.robotsTxt({ sitemaps: [abs('/sitemap.xml')], disallow: DISALLOW }));
     });
 
-    r.get('/llms.txt', async (_req, res) => {
-        res.type('text/plain').set('Cache-Control', TEXT).send(seo.llmsTxt({
+    // The site as llms.txt describes it, shared by /llms.txt and /llms-full.txt (SEO-33).
+    const llmsSite = () => ({
             name: SITE_NAME,
             summary: DESCRIPTION,
             details: 'The pages here are server-rendered and readable without JavaScript. Ride is a proxy to OpenVibe.Games, Watch merges OpenVibe.Live’s live, clip and moment feeds, and Web creates one OpenVibe.Actor task with the signed-in person’s own Network token.',
@@ -83,6 +83,19 @@ function createDiscoveryRoutes(ctx) {
                     { title: 'OpenVibe.Games', url: 'https://openvibe.games', note: 'what Ride plays' },
                     { title: 'OpenVibe.Actor', url: 'https://openvibe.actor', note: 'who browses the web for Web' },
                 ] },
+            ],
+        });
+    r.get('/llms.txt', async (_req, res) => {
+        res.type('text/plain').set('Cache-Control', TEXT).send(seo.llmsTxt(llmsSite()));
+    });
+    // The same, in full (SEO-33): what the site is, then every page llms.txt lists with what it holds.
+    r.get('/llms-full.txt', (_req, res) => {
+        const d = llmsSite();
+        res.type('text/plain').set('Cache-Control', TEXT).send(seo.llmsFull({
+            site: d.name, summary: d.summary, base: abs('/'),
+            sections: [
+                { title: 'About', pages: [{ title: d.name, url: abs('/'), text: [d.summary, d.details].filter(Boolean).join('\n\n') }] },
+                ...(d.sections || []).map((x) => ({ title: x.title, pages: (x.links || []).map((l) => ({ title: l.title, url: l.url, text: l.note || '' })) })),
             ],
         }));
     });
