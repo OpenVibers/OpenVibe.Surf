@@ -25,15 +25,15 @@ function pickBlock({ key, label, head = '', panes, bodyClass = '' }) {
     // A pane with nothing to show is left out, so the chips and the rules that show them match the page.
     panes = (panes || []).filter((p) => p.html);
     if (!panes.length) return '';
-    const chips = panes.map((p, i) => `<input type="radio" name="pick-${esc(key)}" id="pk-${esc(key)}-${esc(p.id)}" value="${esc(p.id)}"${i === 0 ? ' checked' : ''}><label for="pk-${esc(key)}-${esc(p.id)}">${esc(p.label)}</label>`).join('');
-    // The pane carries the id the page already links to (an anchor in the hero, for instance), so a link to it still
-    // opens that pane on a phone (the CSS shows the pane a link points at).
+    // Every pane is shown (the owner, 2026-10-31: never hide content to shorten a page); the chips are links that jump
+    // to a pane. They used to be radio chips that showed one pane and hid the others.
+    const chips = panes.map((p) => `<a class="pick-chip" href="#${esc(p.id)}">${esc(p.label)}</a>`).join('');
     const body = panes.map((p) => `<div class="pick-pane" id="${esc(p.id)}">${p.html}</div>`).join('');
-    const bar = `${head ? `<div class="pick-head"><h2>${esc(head)}</h2></div>` : ''}<div class="pick-row" role="radiogroup" aria-label="${esc(label)}">${chips}</div>`;
+    const bar = `${head ? `<div class="pick-head"><h2>${esc(head)}</h2></div>` : ''}<nav class="pick-row" aria-label="${esc(label)}">${chips}</nav>`;
     return `<div class="pick" id="pick-${esc(key)}"><div class="pick-bar">${bar}</div><div class="pick-body${bodyClass ? ' ' + esc(bodyClass) : ''}">${body}</div></div>`;
 }
 
-/** The rule that shows the picked block of a pick block: one per block, so the CSS is written for the page. */
+/** No longer needed (every pane shows): kept so a caller that still asks for the rules gets none. */
 function pickRule(key, id) {
     return `.pick:has(#pk-${key}-${id}:checked) #${id}{display:block}`;
 }
