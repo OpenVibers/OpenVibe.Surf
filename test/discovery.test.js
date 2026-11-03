@@ -27,6 +27,15 @@ const { boot, check, done } = require('./helpers/boot');
         assert.match(r.text, /<lastmod>2026-/);
     });
 
+    await check('llms-full.txt (SEO-33): the site in full, from the same descriptor as llms.txt', async () => {
+        const r = await t.get('/llms-full.txt');
+        assert.strictEqual(r.status, 200);
+        assert.match(r.headers.get('content-type') || '', /^text\/plain/);
+        assert.ok(r.text.startsWith('# OpenVibe.Surf'), r.text.slice(0, 60));
+        assert.ok(r.text.length > 500, `${r.text.length} characters`);
+        assert.match(r.text, /## About\n\n### /);
+    });
+
     await check('llms.txt describes the room, its three surfs and the machine-readable routes', async () => {
         const r = await t.get('/llms.txt');
         assert.strictEqual(r.status, 200);
