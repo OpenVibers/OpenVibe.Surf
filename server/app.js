@@ -178,7 +178,11 @@ function createApp(opts = {}) {
     app.use(createDiscoveryRoutes(ctx));
 
     // ── Pages (and the no-JavaScript task form) ─────────────
-    app.use(createPageRoutes(ctx));
+    const pageRoutes = createPageRoutes(ctx);
+    // The Markdown twins of the public pages, and the head link and Link: header that name them (SEO-1,
+    // server/agent-twins.js): a twin is the page rendered signed out.
+    require('./agent-twins').mountTwins(app, { router: pageRoutes, descriptor: require('./agent-descriptor'), baseUrl: ctx.config.baseUrl });
+    app.use(pageRoutes);
 
     // eslint-disable-next-line no-unused-vars
     app.use((err, req, res, _next) => {
