@@ -134,6 +134,23 @@ function createApp(opts = {}) {
 
     // ── Static assets (content-hashed ?v= → immutable) ──────
     app.use('/shared', serve.handler());
+    // Terms, Privacy and DMCA in this site's own words (openvibe-shared/legal, profile 'service'; 11-03: the footer's
+    // legal links answered 404 here). The facts must match the code: change both together.
+    const legal = require('openvibe-shared/legal');
+    app.get(legal.PATHS, legal.handler({
+        "host": "openvibe.surf",
+        "name": "OpenVibe.Surf",
+        "id": "surf",
+        "service": "surf",
+        "profile": "service",
+        "what": "Ride Counter-Strike-style surf maps in the browser against the clock, let an agent surf the web for you and report back with its sources, or lean back and surf what is on across OpenVibe.",
+        "makes": [
+                "your runs and times on the maps",
+                "the questions you give the agent and what it reported, with its sources"
+        ],
+        "fetches": true,
+        "ai": true
+    }));
     const setAssetHeaders = (res, filePath) => {
         const rel = path.relative(PUBLIC_DIR, filePath).split(path.sep).join('/');
         const v = res.req && res.req.query && res.req.query.v;
