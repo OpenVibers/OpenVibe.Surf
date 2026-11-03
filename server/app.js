@@ -169,6 +169,18 @@ function createApp(opts = {}) {
     // ── API: Watch, Ride and Web ────────────────────────────
     app.use('/api', express.json({ limit: '32kb' }));
     app.use('/api', createApi(ctx));
+    // GET /openapi.json (SEO-3): the API as OpenAPI 3.1. It is not in openvibe-contracts, so the document is read from
+    // the routes this app mounts under /api/, with the summaries the API files' header comments give them
+    // (server/http/openapi-routes.js).
+    {
+        const d = require('./agent-descriptor');
+        const site = String(config.baseUrl).replace(/\/+$/, '');
+        app.get('/openapi.json', require('./http/openapi-routes').openapiRoute(app, {
+            title: `${d.name} API`, description: d.purpose, version: require('../package.json').version, baseUrl: site,
+            docs: `${site}/developers`,
+            files: ['http/api.js'].map((f) => require('path').join(__dirname, f)),
+        }));
+    }
     app.use('/api', (req, res) => contracts.http.sendProblem(res, 404, 'route.not_found', {
         detail: 'No such API route.',
         ctx: req.ov,
