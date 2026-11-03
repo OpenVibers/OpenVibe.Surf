@@ -46,6 +46,20 @@ const { boot, check, done } = require('./helpers/boot');
         assert.match(r.text, /https:\/\/openvibe\.live/);
         assert.match(r.text, /https:\/\/openvibe\.games/);
         assert.match(r.text, /https:\/\/openvibe\.actor/);
+        // AGT-5: each of its own pages at the Markdown twin, an Optional section last.
+        assert.match(r.text, /\[OpenVibe\.Surf\]\(https:\/\/openvibe\.surf\/index\.md\)/, 'the home is /index.md');
+        assert.match(r.text, /\[Ride\]\(https:\/\/openvibe\.surf\/ride\.md\)/, 'a page is its twin');
+        assert.match(r.text, /\[For developers\]\(https:\/\/openvibe\.surf\/developers\.md\)/);
+        assert.match(r.text, /\[The Watch feed \(JSON\)\]\(https:\/\/openvibe\.surf\/api\/v1\/watch\/feed\?topic=all\)/, 'an API URL keeps its URL');
+        assert.match(r.text, /\n## Optional\n/);
+        assert.match(r.text, /\n## Optional\n\n[\s\S]*\[Sitemap\]\(https:\/\/openvibe\.surf\/sitemap\.xml\)/);
+        assert.strictEqual(r.text.lastIndexOf('\n## '), r.text.indexOf('\n## Optional'), 'Optional is the last section');
+        const own = [...r.text.matchAll(/\]\((https:\/\/openvibe\.surf[^)\s]*)\)( \(HTML\))?/g)];
+        assert.ok(own.length > 8, String(own.length));
+        for (const [, url, html] of own) {
+            const p = new URL(url).pathname;
+            assert.ok(p.endsWith('.md') || /\.[a-z0-9]+$/.test(p) || p.startsWith('/api/') || html, `${url} is a twin, a file or marked (HTML)`);
+        }
     });
 
     await t.close();

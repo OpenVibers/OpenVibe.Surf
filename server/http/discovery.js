@@ -60,8 +60,11 @@ function createDiscoveryRoutes(ctx) {
     });
 
     // The site as llms.txt describes it, shared by /llms.txt and /llms-full.txt (SEO-33).
+    // AGT-5: each of Surf's own pages is linked at its Markdown twin (markdown: true, base: the site origin).
     const llmsSite = () => ({
             name: SITE_NAME,
+            markdown: true,
+            base: site,
             summary: DESCRIPTION,
             details: 'The pages here are server-rendered and readable without JavaScript. Ride is a proxy to OpenVibe.Games, Watch merges OpenVibe.Live’s live, clip and moment feeds, and Web creates one OpenVibe.Actor task with the signed-in person’s own Network token.',
             sections: [
@@ -75,14 +78,16 @@ function createDiscoveryRoutes(ctx) {
                 { title: 'Machine-readable', links: [
                     { title: 'The Watch feed (JSON)', url: abs('/api/v1/watch/feed?topic=all'), note: 'public, cached 30 seconds' },
                     { title: 'The Ride maps (JSON)', url: abs('/api/v1/ride/maps'), note: 'public, cached 60 seconds' },
-                    { title: 'Sitemap', url: abs('/sitemap.xml') },
-                    { title: 'Release metadata (JSON)', url: abs('/release.json') },
                 ] },
-                { title: 'Elsewhere', links: [
-                    { title: 'OpenVibe.Live', url: 'https://openvibe.live', note: 'what Watch surfs' },
-                    { title: 'OpenVibe.Games', url: 'https://openvibe.games', note: 'what Ride plays' },
-                    { title: 'OpenVibe.Actor', url: 'https://openvibe.actor', note: 'who browses the web for Web' },
-                ] },
+            ],
+            // llmstxt.org's "## Optional": what an agent may skip when it needs a shorter context.
+            optional: [
+                { title: 'Sitemap', url: abs('/sitemap.xml') },
+                { title: 'Release metadata (JSON)', url: abs('/release.json') },
+                { title: 'llms-full.txt', url: abs('/llms-full.txt'), note: 'the pages above in full, as plain text' },
+                { title: 'OpenVibe.Live', url: 'https://openvibe.live', note: 'what Watch surfs' },
+                { title: 'OpenVibe.Games', url: 'https://openvibe.games', note: 'what Ride plays' },
+                { title: 'OpenVibe.Actor', url: 'https://openvibe.actor', note: 'who browses the web for Web' },
             ],
         });
     r.get('/llms.txt', async (_req, res) => {
