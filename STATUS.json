@@ -8,11 +8,11 @@
   "runtime": "node 22, express 4, openvibe-shared/shell; no database, no Valkey, no Events; watch parties are in memory and end on restart",
   "port": "5110",
   "domain": "openvibe.surf",
-  "contracts": "openvibe-contracts v0.232.0",
+  "contracts": "openvibe-contracts v0.289.1",
   "sdk": "openvibe-sdk v0.82.0",
   "shared": "openvibe-shared v4.109.2",
   "packages": [
-    "openvibe-contracts v0.232.0",
+    "openvibe-contracts v0.289.1",
     "openvibe-sdk v0.82.0",
     "openvibe-shared v4.109.2"
   ],
@@ -49,5 +49,5 @@
     "limits and readiness",
     "deploy files"
   ],
-  "updated": "2026-11-03"
+  "updated": "2026-11-05"
 }
