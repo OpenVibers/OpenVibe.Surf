@@ -51,6 +51,9 @@ const { assetVersion } = require('../server/assets');
         assert.match(r.text, /id="sf-top"/);
         assert.match(r.text, /ada/);
         assert.match(r.text, /src="https:\/\/openvibe\.games\/surf\/embed\?map=surf_lagoon&amp;embed=1"/);
+        assert.match(r.text, /data-ov-share-sheet/, 'the map has one Share button');
+        assert.match(r.text, /data-url="https:\/\/openvibe\.surf\/ride\/surf_lagoon"/, 'the map\'s public address');
+        assert.match(r.text, /data-title="Surf Lagoon"/);
     });
 
     await check('/ride/:map still embeds when Games has not added its routes yet', async () => {

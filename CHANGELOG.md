@@ -6,7 +6,7 @@ What changed in OpenVibe.Surf, newest first. Each site also publishes its patch 
 
 - **Watch together** (`server/watch/party.js`, `server/http/party.js`, `server/views/index.js`,
   `public/js/surf.js`): a signed-in person opens a party (`POST /watch/party`) and shares an unguessable
-  `/watch/p/<id>` link. The page reuses the TV markup with a `sf-party-` bar (members, host, Copy link, Leave); the
+  `/watch/p/<id>` link. The page reuses the TV markup with a `sf-party-` bar (members, host, Share, Leave); the
   host commands `{ channel_key, position_s, playing, at }` from this site only, members follow over SSE
   (`GET /watch/p/<id>/events`) and correct drift over 2 s, and anyone can leave. State is one in-process Map,
   capped at 200 parties and 50 members each; an empty party ends 30 minutes after its last member leaves, and a
