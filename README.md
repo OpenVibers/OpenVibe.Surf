@@ -70,7 +70,7 @@ Every card is one shape:
 
 A signed-in person opens a party (`POST /watch/party`, from this site) and gets an unguessable id at
 `/watch/p/<id>`; that link is the invitation. Opening it sends a guest to sign in first and joins everyone else.
-The page reuses the TV markup with a `sf-party-` bar: members, host, **Copy link**, **Leave**, and, if the host
+The page reuses the TV markup with a `sf-party-` bar: members, host, **Share** (the network's one Share sheet), **Leave**, and, if the host
 pasted one, a link to an OpenVibe.Chat room (`https://openvibe.chat/...`, validated). There is no chat inside Surf.
 
 - **Host:** the person who opened the party. Only the host commands, with
@@ -129,7 +129,7 @@ its status and prints its words. It is `private, no-store`; a `GET /web/go` star
 | `/ride` | the maps with tier, stages, runs and the record, and the embed of the first map |
 | `/ride/:map` | one map: name, tier, stages, records if Games answers, the embed |
 | `/watch` | the TV: the screen plays clips and moments in the page (HLS), the guide lists every channel; ↑ ↓, a swipe or a tap changes channel; a live stream that records to MP4 plays over Media's DVR playlist, a little behind live, and any other opens on its channel; **Watch together** opens a party |
-| `/watch/p/:id` | a watch party: the same TV, a `sf-party-` bar with the members, host, Copy link and Leave, and the optional OpenVibe.Chat room link; signed-in members follow the host's channel and position over SSE |
+| `/watch/p/:id` | a watch party: the same TV, a `sf-party-` bar with the members, host, Share and Leave, and the optional OpenVibe.Chat room link; signed-in members follow the host's channel and position over SSE |
 | `/web` | the Surf with Vibe form, examples, and what happens next |
 | `/developers` | the API, for people and agents |
 | anything else | the 404 page |

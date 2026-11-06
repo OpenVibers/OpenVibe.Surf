@@ -161,8 +161,6 @@ html.ov-motion .sf-party-dot { animation: sf-party-pulse 2.4s ease-in-out infini
 @keyframes sf-party-pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--live-red, #e11d48) 5%, transparent); } }
 .sf-party-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .sf-party-actions form { margin: 0; }
-.sf-party-share { margin: 0; overflow-wrap: anywhere; }
-.sf-party-share a { color: var(--room-strong); font-weight: 700; }
 .sf-party-chat { margin: 0; }
 .sf-party-chat[hidden] { display: none; }
 .sf-party-chat a { display: inline-flex; align-items: center; gap: 6px; color: var(--room-strong); font-weight: 800; text-decoration: none; }
@@ -209,9 +207,8 @@ html[data-ov-motion=reduced] .sf-run-speed i { animation: none !important; }
 html.ov-motion .sf-party-playing .sf-party-dot { animation: sf-pulse 1.6s ease-out infinite; }
 @keyframes sf-pulse { to { box-shadow: 0 0 0 10px transparent; } }
 .sf-party-is-host { padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; color: var(--room-on); background: var(--room-fill); }
-.sf-party-actions, .sf-party-share { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sf-party-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .sf-party-actions form { margin: 0; }
-.sf-party-url, .sf-party-link { max-width: 260px; min-width: 0; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--border, #1f2d47); background: var(--bg-primary, #0a0f1c); color: var(--text-secondary, #96a7c2); font: 500 .8rem ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sf-party-chat { margin: 10px 0 0; } .sf-party-chat a { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
 .sf-party-chat-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .sf-party-chat-url { flex: 1 1 240px; min-height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border, #1f2d47); background: var(--bg-input, var(--bg-primary, #0a0f1c)); color: inherit; font: inherit; }

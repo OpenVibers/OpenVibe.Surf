@@ -86,7 +86,8 @@ function openEvents(t, path, cookie) {
         assert.match(page.text, /data-sf-party-members>1</);
         assert.match(page.text, /host <b data-sf-party-host-name>kim<\/b>/);
         assert.match(page.text, /id="sf-tv"/, 'the same TV markup');
-        assert.match(page.text, /data-sf-party-copy/, 'Copy link');
+        assert.match(page.text, /data-ov-share-sheet/, 'the one Share button');
+        assert.match(page.text, new RegExp(`data-url="https://openvibe.surf${partyPath}"`), 'the party\'s own address');
         assert.match(page.text, /data-sf-party-leave/, 'Leave');
         assert.match(page.text, /data-sf-party-chat-form/, 'the host can paste a chat link');
         assert.strictEqual(page.headers.get('cache-control'), 'private, no-store');

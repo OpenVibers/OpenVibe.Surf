@@ -132,10 +132,12 @@ ${first ? `<section id="sf-ride-embed" aria-labelledby="sf-embed-h" class="sf-pl
 function map({ id, map: m = null, top = [], games = 'ready' } = {}) {
     const one = m || { id };
     const name = one.name || String(id || '');
+    const mapPath = `/ride/${encodeURIComponent(id || one.id || '')}`;
     const rows = (Array.isArray(top) ? top : []).map((r, i) => `<tr${i === 0 ? ' class="is-wr"' : ''}><td>${esc(r.rank == null ? i + 1 : r.rank)}</td><td>${esc(r.name || '')}</td><td class="sf-time">${esc(runTime(r.timeMs) || '')}</td></tr>`).join('');
     const body = `<div class="sf-wrap sf-page-pad">
 <header class="sf-page-h sf-map-h" id="sf-map" data-sf-map-id="${esc(id || one.id || '')}"><p class="sf-kicker"><a href="/ride">Ride</a> · ${esc(tierLabel(one.tier))}</p><h1>${esc(name)}</h1>
-<p class="sf-lede">${one.stages == null ? '' : `${esc(one.stages)} stage${Number(one.stages) === 1 ? '' : 's'}`}${one.records != null ? ` · ${esc(one.records)} run${Number(one.records) === 1 ? '' : 's'}` : ''}${one.author ? ` · by ${esc(one.author)}` : ''}${one.wrMs != null ? ` · record <b>${esc(runTime(one.wrMs))}</b>${one.wrHolder ? ` by ${esc(one.wrHolder)}` : ''}` : ''}</p></header>
+<p class="sf-lede">${one.stages == null ? '' : `${esc(one.stages)} stage${Number(one.stages) === 1 ? '' : 's'}`}${one.records != null ? ` · ${esc(one.records)} run${Number(one.records) === 1 ? '' : 's'}` : ''}${one.author ? ` · by ${esc(one.author)}` : ''}${one.wrMs != null ? ` · record <b>${esc(runTime(one.wrMs))}</b>${one.wrHolder ? ` by ${esc(one.wrHolder)}` : ''}` : ''}</p>
+<p>${kit.share({ title: name, url: `${layoutLib.baseUrl()}${mapPath}`, text: `${name}: a surf map you ride in the browser, with stages, a millisecond timer and records.` })}</p></header>
 ${games === 'not_ready' ? `<p class="sf-note" id="sf-ride-not-ready">${esc(gamesNote(games))}</p>` : ''}
 <div class="sf-map-grid">
 <section id="sf-map-embed" aria-label="Play">${gameFrame(one, name) || `<div class="sf-empty">${kit.icon('game')}<p>This map cannot be played here right now.</p></div>`}</section>
@@ -196,7 +198,7 @@ ${tvBlock({ feed })}
     return layout({ title: 'Watch', description: 'Lean-back channel surfing over OpenVibe.Live: who is live, clips and the week\'s AI moments in one feed.', path: '/watch', body, active: '/watch' });
 }
 
-/** The party bar: members, host, Copy link, Leave, and the optional OpenVibe.Chat room link (a link only). */
+/** The party bar: members, host, Share, Leave, and the optional OpenVibe.Chat room link (a link only). */
 function partyBar({ party = {}, isHost = false, partyPath = '' } = {}) {
     const chat = party.chat_url ? String(party.chat_url) : null;
     const chatLink = chat
@@ -208,10 +210,9 @@ function partyBar({ party = {}, isHost = false, partyPath = '' } = {}) {
     return `<section class="sf-party" id="sf-party" data-sf-party data-sf-party-id="${esc(party.id || '')}" data-sf-party-is-host="${isHost ? '1' : '0'}" data-sf-party-channel="${esc(party.channel_key || '')}" data-sf-party-position="${esc(party.position_s == null ? 0 : party.position_s)}" data-sf-party-playing="${party.playing === false ? '0' : '1'}" data-sf-party-at="${esc(party.at || 0)}" data-sf-party-url="${esc(partyPath)}">
 <div class="sf-party-bar">
 <p class="sf-party-who"><span class="sf-party-dot" aria-hidden="true"></span>Watch together · <b data-sf-party-members>${esc(party.members == null ? 1 : party.members)}</b> here · host <b data-sf-party-host-name>${esc(party.host || 'the host')}</b></p>
-<div class="sf-party-actions"><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-party-copy data-sf-party-url="${esc(partyPath)}">Copy link</button>
+<div class="sf-party-actions">${kit.share({ title: 'Watch together on OpenVibe.Surf', url: `${layoutLib.baseUrl()}${partyPath}`, text: 'Watch the same OpenVibe.Live channel at the same moment with friends.' })}
 <form method="post" action="${esc(partyPath)}/leave"><button type="submit" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-party-leave>Leave</button></form></div>
 </div>
-<p class="sf-fine sf-party-share">Share this link: <a href="${esc(partyPath)}" data-sf-party-link>${esc(partyPath)}</a>${isHost ? ' · you are the host' : ' · the host picks the channel and the position'}</p>
 <p class="sf-status" data-sf-party-status role="status"></p>
 ${chatLink}${chatForm}
 </section>`;

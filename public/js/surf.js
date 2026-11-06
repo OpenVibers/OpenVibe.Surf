@@ -295,16 +295,8 @@
             }
         }, { passive: true });
 
-        // Party bar: Copy link, the optional Chat room link, and the live member count.
+        // Party bar: the optional Chat room link, and the live member count.
         if (party) {
-            var copy = party.querySelector('[data-sf-party-copy]');
-            if (copy) copy.addEventListener('click', function () {
-                var path = copy.getAttribute('data-sf-party-url') || partyPath;
-                var url = location.origin + path;
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(url).then(function () { say('Party link copied.'); }, function () { window.prompt('Copy this party link', url); });
-                } else window.prompt('Copy this party link', url);
-            });
             var chatForm = party.querySelector('[data-sf-party-chat-form]');
             if (chatForm) chatForm.addEventListener('submit', function (e) {
                 e.preventDefault();
