@@ -137,7 +137,7 @@ function map({ id, map: m = null, top = [], games = 'ready' } = {}) {
     const body = `<div class="sf-wrap sf-page-pad">
 <header class="sf-page-h sf-map-h" id="sf-map" data-sf-map-id="${esc(id || one.id || '')}"><p class="sf-kicker"><a href="/ride">Ride</a> · ${esc(tierLabel(one.tier))}</p><h1>${esc(name)}</h1>
 <p class="sf-lede">${one.stages == null ? '' : `${esc(one.stages)} stage${Number(one.stages) === 1 ? '' : 's'}`}${one.records != null ? ` · ${esc(one.records)} run${Number(one.records) === 1 ? '' : 's'}` : ''}${one.author ? ` · by ${esc(one.author)}` : ''}${one.wrMs != null ? ` · record <b>${esc(runTime(one.wrMs))}</b>${one.wrHolder ? ` by ${esc(one.wrHolder)}` : ''}` : ''}</p>
-<p class="sf-map-share">${kit.share({ title: name, url: `${layoutLib.baseUrl()}${mapPath}`, text: `${name}: a surf map you ride in the browser, with stages, a millisecond timer and records.`, small: true })}</p></header>
+<p>${kit.share({ title: name, url: `${layoutLib.baseUrl()}${mapPath}`, text: `${name}: a surf map you ride in the browser, with stages, a millisecond timer and records.` })}</p></header>
 ${games === 'not_ready' ? `<p class="sf-note" id="sf-ride-not-ready">${esc(gamesNote(games))}</p>` : ''}
 <div class="sf-map-grid">
 <section id="sf-map-embed" aria-label="Play">${gameFrame(one, name) || `<div class="sf-empty">${kit.icon('game')}<p>This map cannot be played here right now.</p></div>`}</section>
@@ -210,7 +210,7 @@ function partyBar({ party = {}, isHost = false, partyPath = '' } = {}) {
     return `<section class="sf-party" id="sf-party" data-sf-party data-sf-party-id="${esc(party.id || '')}" data-sf-party-is-host="${isHost ? '1' : '0'}" data-sf-party-channel="${esc(party.channel_key || '')}" data-sf-party-position="${esc(party.position_s == null ? 0 : party.position_s)}" data-sf-party-playing="${party.playing === false ? '0' : '1'}" data-sf-party-at="${esc(party.at || 0)}" data-sf-party-url="${esc(partyPath)}">
 <div class="sf-party-bar">
 <p class="sf-party-who"><span class="sf-party-dot" aria-hidden="true"></span>Watch together · <b data-sf-party-members>${esc(party.members == null ? 1 : party.members)}</b> here · host <b data-sf-party-host-name>${esc(party.host || 'the host')}</b></p>
-<div class="sf-party-actions">${kit.share({ title: 'Watch together on OpenVibe.Surf', url: `${layoutLib.baseUrl()}${partyPath}`, text: 'Watch the same OpenVibe.Live channel at the same moment with friends.', small: true })}
+<div class="sf-party-actions">${kit.share({ title: 'Watch together on OpenVibe.Surf', url: `${layoutLib.baseUrl()}${partyPath}`, text: 'Watch the same OpenVibe.Live channel at the same moment with friends.' })}
 <form method="post" action="${esc(partyPath)}/leave"><button type="submit" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-party-leave>Leave</button></form></div>
 </div>
 <p class="sf-status" data-sf-party-status role="status"></p>

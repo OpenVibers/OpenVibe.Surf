@@ -161,7 +161,6 @@ html.ov-motion .sf-party-dot { animation: sf-party-pulse 2.4s ease-in-out infini
 @keyframes sf-party-pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--live-red, #e11d48) 5%, transparent); } }
 .sf-party-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .sf-party-actions form { margin: 0; }
-.sf-map-share { margin: 12px 0 0; }
 .sf-party-chat { margin: 0; }
 .sf-party-chat[hidden] { display: none; }
 .sf-party-chat a { display: inline-flex; align-items: center; gap: 6px; color: var(--room-strong); font-weight: 800; text-decoration: none; }
