@@ -299,21 +299,43 @@ const deskUrl = (value) => {
     return url && new URL(url).origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(new URL(url).pathname) ? url : null;
 };
 
+// The words a person reads for each state (the same in surf.js).
+const TASK_STATE = { queued: 'Getting ready', running: 'Working', verifying: 'Checking the answer', succeeded: 'Done', done: 'Done', failed: 'Did not finish', stopped: 'Stopped', cancelled: 'Stopped' };
+const sourceChip = (url) => {
+    const u = new URL(url);
+    const path = `${u.pathname}${u.search}`.replace(/\/$/, '');
+    return `<li><a href="${esc(url)}" target="_blank" rel="nofollow noopener noreferrer"><b>${esc(u.hostname.replace(/^www\./, ''))}</b>${path ? `<span>${esc(path.length > 48 ? `${path.slice(0, 47)}…` : path)}</span>` : ''}</a></li>`;
+};
+
+/**
+ * One web task (plan Z, 11-07: "Surf and computer and actor all kinda go hand in hand … clear interfaces"). The same
+ * three things every agent surface shows, in the same order: what it is doing (one line), where it works, and what you
+ * can do (take over, watch). Then the answer with its sources; every step sits behind a count. surf.js keeps it live.
+ */
 function webTask({ task, actorUrl } = {}) {
     const id = String(task.id);
     const actor = `${String(actorUrl).replace(/\/+$/, '')}/tasks/${encodeURIComponent(id)}`;
     const desk = deskUrl(task.desk && task.desk.url);
     const sources = task.result && Array.isArray(task.result.sources) ? task.result.sources.map(safeWebUrl).filter(Boolean) : [];
     const report = task.result && typeof task.result.answer === 'string' ? task.result.answer : '';
-    const body = `<div class="sf-wrap sf-page-pad sf-narrow sf-desk-page" data-sf-desk-task="${esc(id)}" data-sf-desk-open="${['queued', 'running', 'verifying'].includes(task.state) ? '1' : '0'}">
-<header class="sf-page-h sf-desk-head"><p class="sf-kicker">Web · Surf with Vibe</p><h1>Surf report</h1><p class="sf-desk-query">${esc(task.task || 'Your web task')}</p><p class="sf-desk-state" data-sf-desk-state role="status">${esc(task.state || 'queued')}</p></header>
-<section class="sf-card sf-desk-view" aria-labelledby="sf-desk-view-h"><h2 id="sf-desk-view-h">Agent desk</h2><p data-sf-desk-note>${desk ? 'Your agent is working on its private desk. Open the live viewer to watch or take over.' : 'The agent has not opened a desk, or its desk has ended.'}</p>
-<p data-sf-desk-links${desk ? '' : ' hidden'}><a class="sf-desk-watch" data-sf-desk-watch href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Watch live</a> · <a class="sf-desk-takeover" data-sf-desk-takeover href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Take over</a></p><p data-sf-desk-needs${task.needs_you ? '' : ' hidden'}>${esc(task.needs_you && task.needs_you.what || '')}</p></section>
-<section class="sf-card sf-desk-steps" aria-labelledby="sf-desk-steps-h"><h2 id="sf-desk-steps-h">Live steps</h2><ol data-sf-desk-steps></ol><p class="sf-fine" data-sf-desk-steps-note>Connecting to the agent’s live steps…</p></section>
-<section class="sf-card sf-desk-evidence" aria-labelledby="sf-desk-evidence-h"><h2 id="sf-desk-evidence-h">Sources cited</h2><ul data-sf-desk-sources>${sources.map((url) => `<li><a href="${esc(url)}" target="_blank" rel="nofollow noopener noreferrer">${esc(url)}</a></li>`).join('')}</ul><p data-sf-desk-sources-empty${sources.length ? ' hidden' : ''}>Sources will appear when the report is ready.</p></section>
-<section class="sf-card sf-desk-report" aria-labelledby="sf-desk-report-h"><h2 id="sf-desk-report-h">Final report</h2><div class="sf-desk-report-text" data-sf-desk-report>${esc(report)}</div><p data-sf-desk-report-empty${report ? ' hidden' : ''}>The agent is still working.</p></section>
-<p class="sf-fine sf-desk-actor"><a href="${esc(actor)}" target="_blank" rel="noopener noreferrer">Open full task in Actor</a> · <a href="/web">Start another surf</a></p></div>`;
-    return layout({ title: 'Surf report', path: `/web/t/${encodeURIComponent(id)}`, robots: 'noindex, nofollow', body, active: '/web' });
+    const state = String(task.state || 'queued');
+    const open = ['queued', 'running', 'verifying'].includes(state);
+    const body = `<div class="sf-wrap sf-page-pad sf-narrow sf-desk-page sf-task" data-sf-desk-task="${esc(id)}" data-sf-desk-open="${open ? '1' : '0'}" data-state="${esc(state)}">
+<header class="sf-task-head"><p class="sf-kicker">Surf with Vibe</p><h1 class="sf-task-q">${esc(task.task || 'Your web task')}</h1></header>
+<section class="sf-task-card" aria-label="What your agent is doing">
+<p class="sf-task-now"><span class="sf-task-dot" aria-hidden="true"></span><b data-sf-desk-state role="status">${esc(TASK_STATE[state] || state)}</b><span class="sf-task-latest" data-sf-desk-latest>${open ? 'Your agent is on it.' : ''}</span></p>
+<p class="sf-task-where">${kit.icon('globe')}<span data-sf-desk-note>${desk ? 'On a private desk: a real browser of its own' : open ? 'Searching and reading; no desk open' : 'Searched and read the web'}</span></p>
+<p class="sf-task-needs" data-sf-desk-needs${task.needs_you ? '' : ' hidden'}>${esc(task.needs_you && task.needs_you.what || '')}</p>
+<p class="sf-task-acts" data-sf-desk-links${desk ? '' : ' hidden'}><a class="ovk-btn ovk-btn--primary sf-desk-takeover" data-sf-desk-takeover href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Take over</a><a class="ovk-btn sf-desk-watch" data-sf-desk-watch href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Watch the desk</a></p>
+<p class="sf-task-more"><a href="${esc(actor)}" target="_blank" rel="noopener noreferrer">Open in Actor</a><span aria-hidden="true">·</span><a href="/web">Ask another</a></p>
+</section>
+<section class="sf-card sf-desk-report sf-task-answer" aria-labelledby="sf-desk-report-h"><h2 id="sf-desk-report-h">The answer</h2>
+<div class="sf-desk-report-text" data-sf-desk-report>${esc(report)}</div><p class="sf-task-wait" data-sf-desk-report-empty${report ? ' hidden' : ''}>It appears here when your agent finishes, with every source it used.</p>
+<div class="sf-task-cites"><h3>Sources</h3><ul class="sf-task-sources" data-sf-desk-sources>${sources.map(sourceChip).join('')}</ul><p class="sf-task-wait" data-sf-desk-sources-empty${sources.length ? ' hidden' : ''}>None yet.</p></div>
+</section>
+<details class="sf-card sf-desk-steps sf-task-steps"${open ? ' open' : ''}><summary>Every step <span class="sf-task-count" data-sf-desk-count></span></summary><ol data-sf-desk-steps></ol><p class="sf-fine" data-sf-desk-steps-note>Connecting to the agent’s live steps…</p></details>
+<p class="sf-fine sf-task-rule">It never signs in or pays for you: at a login, a captcha or a checkout it stops and hands over.</p></div>`;
+    return layout({ title: 'Surf task', path: `/web/t/${encodeURIComponent(id)}`, robots: 'noindex, nofollow', body, active: '/web' });
 }
 
 function webTaskError({ notFound = false } = {}) {

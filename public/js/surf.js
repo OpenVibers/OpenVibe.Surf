@@ -363,10 +363,15 @@
             var u = safeUrl(value);
             return u && new URL(u).origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(new URL(u).pathname) ? u : null;
         }
+        var WORDS = { queued: 'Getting ready', running: 'Working', verifying: 'Checking the answer', succeeded: 'Done', done: 'Done', failed: 'Did not finish', stopped: 'Stopped', cancelled: 'Stopped' };
+        var count = root.querySelector('[data-sf-desk-count]');
+        var latest = root.querySelector('[data-sf-desk-latest]');
         function snapshot(t) {
-            root.querySelector('[data-sf-desk-state]').textContent = t.state || 'Working';
+            var st = t.state || 'running';
+            root.setAttribute('data-state', st);
+            root.querySelector('[data-sf-desk-state]').textContent = WORDS[st] || st;
             var desk = botDesk(t.desk && t.desk.url);
-            root.querySelector('[data-sf-desk-note]').textContent = desk ? 'Your agent is working on its private desk. Open the live viewer to watch or take over.' : 'The agent has not opened a desk, or its desk has ended.';
+            root.querySelector('[data-sf-desk-note]').textContent = desk ? 'On a private desk: a real browser of its own' : ['queued', 'running', 'verifying'].includes(st) ? 'Searching and reading; no desk open' : 'Searched and read the web';
             var links = root.querySelector('[data-sf-desk-links]');
             links.hidden = !desk;
             if (desk) {
@@ -382,8 +387,11 @@
             sources.forEach(function (value) {
                 var url = safeUrl(value);
                 if (!url) return;
-                var li = document.createElement('li'), a = document.createElement('a');
-                a.href = url; a.textContent = url; a.target = '_blank'; a.rel = 'nofollow noopener noreferrer';
+                var li = document.createElement('li'), a = document.createElement('a'), u = new URL(url);
+                a.href = url; a.target = '_blank'; a.rel = 'nofollow noopener noreferrer';
+                var host = document.createElement('b'); host.textContent = u.hostname.replace(/^www\./, ''); a.appendChild(host);
+                var path = (u.pathname + u.search).replace(/\/$/, '');
+                if (path) { var sp = document.createElement('span'); sp.textContent = path.length > 48 ? path.slice(0, 47) + '…' : path; a.appendChild(sp); }
                 li.appendChild(a); list.appendChild(li);
             });
             root.querySelector('[data-sf-desk-sources-empty]').hidden = !!list.children.length;
@@ -394,6 +402,7 @@
                 if (timer) clearInterval(timer);
                 if (stream) stream.close();
                 root.setAttribute('data-sf-desk-open', '0'); root.querySelector('[data-sf-desk-steps-note]').textContent = 'The task has ended.';
+                if (latest) latest.textContent = '';
             }
         }
         function refresh() {
@@ -412,6 +421,8 @@
                 line.className = 'sf-desk-step';
                 line.textContent = [item.step === 'tool_call' ? 'Used ' + (item.tool || 'a tool') : item.step === 'tool_result' ? 'Evidence' : 'Step', item.text || item.input || ''].filter(Boolean).join(': ').slice(0, 1000);
                 steps.appendChild(line);
+                if (count) count.textContent = '(' + steps.children.length + ')';
+                if (latest) latest.textContent = line.textContent.slice(0, 140);
                 root.querySelector('[data-sf-desk-steps-note]').textContent = 'Updating live as the agent works.';
             } catch (_) { /* ignore a malformed event */ }
         }
