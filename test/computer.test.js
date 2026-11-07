@@ -25,6 +25,8 @@ const COMPUTER = { session_id: 'ses_01JAB2C3D4E5F6G7H8J9K0MNPQR', machine: 'a sh
             const r = await t.get(`/web/t/${id}`, { cookie: signedIn });
             assert.strictEqual(r.status, 200, r.text);
             assert.match(r.text, /class="ov-task-still"/);
+            // The screen in a frame with a Live badge and the machine under it (Opus, 11-07).
+            assert.match(r.text, /<figure class="sf-task-screen"><img class="ov-task-still"[^>]*hidden><figcaption><span class="sf-task-live">Live<\/span><span>Your agent\u2019s screen on a shared desk host<\/span><\/figcaption><\/figure>/);
             assert.match(r.text, new RegExp(`data-src="/api/v1/web/tasks/${id}/still"`));
             assert.match(r.text, /a shared desk host/);
             assert.match(r.text, /metered by the minute/);
