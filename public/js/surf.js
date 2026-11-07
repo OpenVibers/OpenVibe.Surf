@@ -420,6 +420,9 @@
             if (giveForm) giveForm.hidden = !driving;
             var links = root.querySelector('[data-sf-desk-links]');
             links.hidden = !desk;
+            // Tapping the screen opens the full view: the desk, when the task has one (plan Z, 11-07).
+            var screen = root.querySelector('[data-sf-desk-screen]');
+            if (screen) { if (desk) screen.href = desk; else screen.removeAttribute('href'); }
             if (desk) {
                 root.querySelector('[data-sf-desk-watch]').href = desk;
                 root.querySelector('[data-sf-desk-takeover]').href = desk;

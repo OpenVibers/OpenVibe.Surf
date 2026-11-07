@@ -331,7 +331,7 @@ function webTask({ task, actorUrl } = {}) {
 <section class="sf-task-card" aria-label="What your agent is doing">
 <p class="sf-task-now"><span class="sf-task-dot" aria-hidden="true"></span><b data-sf-desk-state role="status">${esc(TASK_STATE[state] || state)}</b><span class="sf-task-latest" data-sf-desk-latest>${open ? 'Your agent is on it.' : ''}</span></p>
 <p class="sf-task-where">${kit.icon('globe')}<span data-sf-desk-note>${esc(where)}</span></p>
-<img class="ov-task-still" data-sf-desk-still data-src="/api/v1/web/tasks/${esc(id)}/still" alt="Your agent's screen now" width="320" height="180" hidden>
+<figure class="sf-task-screen"><a class="sf-task-screen-open" data-sf-desk-screen${desk ? ` href="${esc(desk)}"` : ''} target="_blank" rel="noopener noreferrer"><img class="ov-task-still" data-sf-desk-still data-src="/api/v1/web/tasks/${esc(id)}/still" alt="Your agent's screen now" width="320" height="180" hidden></a><figcaption><span class="sf-task-live">Live</span><span>Your agent’s screen</span></figcaption></figure>
 <p class="sf-task-needs" data-sf-desk-needs${task.needs_you ? '' : ' hidden'}>${esc(task.needs_you && task.needs_you.what || '')}</p>
 <form class="sf-task-takeover" method="post" action="/api/v1/web/tasks/${esc(id)}/takeover" data-sf-desk-takeover-form${desk && open && !driving ? '' : ' hidden'}><button class="ovk-btn ovk-btn--primary sf-desk-takeover" type="submit" data-sf-desk-takeover>Take over</button></form>
 <form class="sf-task-giveback" method="post" action="/api/v1/web/tasks/${esc(id)}/giveback" data-sf-desk-giveback-form${driving ? '' : ' hidden'}><button class="ovk-btn sf-desk-takeover" type="submit" data-sf-desk-giveback>Give it back</button></form>
