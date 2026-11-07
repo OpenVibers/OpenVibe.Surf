@@ -55,6 +55,11 @@ function load(env = process.env) {
         // Ride: maps are cached 60 s; Games has a little longer than one Live source to answer.
         rideCacheMs: Math.max(0, int(env.SURF_RIDE_CACHE_MS, 60_000)),
         gamesTimeoutMs: atLeast(env.SURF_GAMES_TIMEOUT_MS, 200, 4000),
+        // The agent's step (design 2026-11-07): Surf publishes agent.step.started/ended as the person's task changes
+        // state. Off until EVENTS_URL and the OAuth client secret are set, like every service's outbox.
+        events: {
+            url: String(env.EVENTS_URL || '').replace(/\/+$/, ''),
+        },
         // Web: Actor creates a task quickly, but a cold allowance check may take a moment.
         actorTimeoutMs: atLeast(env.SURF_ACTOR_TIMEOUT_MS, 200, 15_000),
         // Watch together: in-memory parties, hard caps 200 open parties and 50 members each. The environment may
