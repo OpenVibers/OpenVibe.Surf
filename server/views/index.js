@@ -339,8 +339,9 @@ function webTask({ task, actorUrl } = {}) {
 <p class="sf-task-more"><a href="${esc(actor)}" target="_blank" rel="noopener noreferrer">Open in Actor</a><span aria-hidden="true">·</span><a href="/web">Ask another</a></p>
 </section>
 <section class="sf-card sf-desk-report sf-task-answer" aria-labelledby="sf-desk-report-h"><h2 id="sf-desk-report-h">The answer</h2>
-<div class="sf-desk-report-text" data-sf-desk-report>${esc(report)}</div><p class="sf-task-wait" data-sf-desk-report-empty${report ? ' hidden' : ''}>It appears here when your agent finishes, with every source it used.</p>
+<div class="sf-desk-report-text" data-sf-desk-report>${esc(report)}</div><p class="sf-task-wait" data-sf-desk-report-empty${report ? ' hidden' : ''}>${open ? 'It appears here when your agent finishes, with every source it used.' : 'Your agent finished without an answer. Every step below shows how far it got.'}</p>
 <div class="sf-task-cites"><h3>Sources</h3><ul class="sf-task-sources" data-sf-desk-sources>${sources.map(sourceChip).join('')}</ul><p class="sf-task-wait" data-sf-desk-sources-empty${sources.length ? ' hidden' : ''}>None yet.</p></div>
+<p class="sf-task-answer-acts" data-sf-answer-acts${report ? '' : ' hidden'}><button class="ovk-btn ovk-btn--primary" type="button" data-sf-answer-copy>Copy the answer</button><a class="ovk-btn ovk-btn--quiet" href="/web?q=${encodeURIComponent(`Following up on \u201c${String(task.task || 'my last task').slice(0, 200)}\u201d: `)}">Ask a follow-up</a></p>
 </section>
 <details class="sf-card sf-desk-steps sf-task-steps"${open ? ' open' : ''}><summary>Every step <span class="sf-task-count" data-sf-desk-count></span></summary><ol data-sf-desk-steps></ol><p class="sf-fine" data-sf-desk-steps-note>Connecting to the agent’s live steps…</p></details>
 <p class="sf-fine sf-task-rule">It never signs in or pays for you: at a login, a captcha or a checkout it stops and hands over.</p></div>`;

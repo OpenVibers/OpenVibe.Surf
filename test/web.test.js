@@ -152,6 +152,9 @@ const ORIGIN = 'https://openvibe.surf';
         assert.match(r.text, /openvibe\.bot\/machines/);
         assert.match(r.text, /openvibe\.actor\/tasks/);
         assert.ok(!r.text.includes(token));
+        // The result page (Opus, 11-07): the answer carries Copy and a follow-up that starts a new ask about this task.
+        assert.match(r.text, /<p class="sf-task-answer-acts" data-sf-answer-acts><button class="ovk-btn ovk-btn--primary" type="button" data-sf-answer-copy>Copy the answer<\/button>/);
+        assert.match(r.text, /href="\/web\?q=Following%20up%20on%20%E2%80%9C%3Cfind%20a%20flight%3E%E2%80%9D%3A%20"/);
         const sent = t.upstreams.lastFor(`/api/v1/tasks/${t.upstreams.state.actor.id}`);
         assert.strictEqual(sent.headers.authorization, `Bearer ${token}`);
     });
