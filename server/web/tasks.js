@@ -64,6 +64,54 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console, steps 
         return data;
     }
 
+    /**
+     * Take over / Give it back (plan 2026-11-07): one API on the task, at Actor. Built on the same hand-off the
+     * agent's hand_to_person tool uses; the answer is the task (with computer.driving true or false and the desk to
+     * watch). A 4xx from Actor (another person's task is 404, a task with no Computer is 409) keeps its words.
+     */
+    async function handoff({ token, id, action, subject = null }) {
+        if (!token) throw Object.assign(new Error('Sign in to drive the desk.'), { status: 401 });
+        if (!TASK_ID.test(String(id || ''))) throw Object.assign(new Error('Task not found.'), { status: 404 });
+        if (!['takeover', 'giveback'].includes(action)) throw Object.assign(new Error('Task not found.'), { status: 404 });
+        let res;
+        try {
+            res = await fetchImpl(`${taskPath(id)}/${action}`, {
+                method: 'POST', headers: { ...headers(token), 'Content-Type': 'application/json' },
+                body: '{}', signal: AbortSignal.timeout(config.actorTimeoutMs || 15_000),
+            });
+        } catch {
+            throw Object.assign(new Error('OpenVibe.Actor did not answer.'), { status: 502 });
+        }
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || data.id !== id) {
+            const detail = String((data && (data.detail || data.title || data.error)) || 'OpenVibe.Actor did not answer.').slice(0, 300);
+            throw Object.assign(new Error(detail), { status: res.status === 404 ? 404 : res.status >= 400 && res.status < 500 ? res.status : 502, code: data && data.code });
+        }
+        agentSteps.note(data, { subject }).catch(() => {});
+        return data;
+    }
+
+    /**
+     * The task's Computer still, fetched from Actor as the person (the token stays in the cookie and this service is
+     * the browser's only origin). Actor in turn asks the session's own service. → { status, type, bytes }.
+     */
+    async function still({ token, id }) {
+        if (!token) throw Object.assign(new Error('Sign in to see the desk.'), { status: 401 });
+        if (!TASK_ID.test(String(id || ''))) throw Object.assign(new Error('Task not found.'), { status: 404 });
+        let res;
+        try {
+            res = await fetchImpl(`${taskPath(id)}/still`, { headers: { Accept: 'image/jpeg, image/png', ...headers(token) }, signal: AbortSignal.timeout(config.actorTimeoutMs || 15_000) });
+        } catch {
+            throw Object.assign(new Error('OpenVibe.Actor did not answer.'), { status: 502 });
+        }
+        if (!res.ok) throw Object.assign(new Error(res.status === 404 ? 'No picture.' : 'The desk is not reachable.'), { status: res.status === 404 || res.status === 401 ? res.status : 502 });
+        const type = String(res.headers.get('content-type') || '').split(';')[0].trim();
+        if (!/^image\/(jpeg|png)$/.test(type)) throw Object.assign(new Error('No picture.'), { status: 502 });
+        const bytes = Buffer.from(await res.arrayBuffer());
+        if (!bytes.length) throw Object.assign(new Error('No picture.'), { status: 404 });
+        return { status: 200, type, bytes };
+    }
+
     // Actor offers SSE. Proxy it server-side so the person's token stays in an httpOnly cookie and never enters JS.
     async function events({ token, id, after, res }) {
         if (!token) return res.status(401).end();
@@ -139,7 +187,7 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console, steps 
         return { task_id: id, page: `/web/t/${encodeURIComponent(id)}` };
     }
 
-    return { createTask, task, events, validQuery };
+    return { createTask, task, events, handoff, still, validQuery };
 }
 
 module.exports = { createWeb, taskText, validQuery, newIdempotencyKey, PREFIX, MIN_QUERY, MAX_QUERY, TASK_ID };

@@ -114,6 +114,44 @@ function createApi(ctx) {
     });
     r.get('/v1/web/tasks/:id/events', requireToken, (req, res) => web.events({ token: req.webToken, id: req.params.id, after: req.get('last-event-id'), res }));
 
+    // The task's Computer still (plan 2026-11-07): the browser never talks to Actor or to the session's service
+    // directly, and the person's token stays in the httpOnly cookie. Same-origin <img>, no-store, private.
+    r.get('/v1/web/tasks/:id/still', requireToken, async (req, res) => {
+        try {
+            const shot = await web.still({ token: req.webToken, id: req.params.id });
+            res.set('Cache-Control', 'private, no-store');
+            res.set('X-Content-Type-Options', 'nosniff');
+            res.set('Content-Type', shot.type);
+            res.set('Content-Length', String(shot.bytes.length));
+            return res.status(200).end(shot.bytes);
+        } catch (err) {
+            return problem(req, res, err.status || 502, err.code || 'web.still.unavailable', err.message);
+        }
+    });
+
+    // Take over / Give it back (plan 2026-11-07): one form, no JavaScript needed. Take over goes to the desk's own
+    // page (Actor answered the watch link); Give it back returns to the task. Only this site's own forms.
+    const deskUrl = (value) => {
+        try {
+            const u = new URL(String(value || ''));
+            return u.origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(u.pathname) ? u.href : null;
+        } catch { return null; }
+    };
+    for (const action of ['takeover', 'giveback']) {
+        r.post(`/v1/web/tasks/:id/${action}`, requireToken, requireOrigin, async (req, res) => {
+            try {
+                const task = await web.handoff({ token: req.webToken, id: req.params.id, action, subject: req.viewer && req.viewer.subject ? req.viewer.subject : null });
+                if (action === 'takeover') {
+                    const desk = deskUrl(task.desk && task.desk.url);
+                    if (desk) return res.redirect(303, desk);
+                }
+                return res.redirect(303, `/web/t/${encodeURIComponent(req.params.id)}`);
+            } catch (err) {
+                return problem(req, res, err.status || 502, err.code || 'web.handoff.unavailable', err.message);
+            }
+        });
+    }
+
     return r;
 }
 

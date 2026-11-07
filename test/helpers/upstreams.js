@@ -70,7 +70,7 @@ async function startUpstreams() {
         dvr: { 9002: 'https://openvibe.media/v/9002/dvr.m3u8' },
         fail: { streams: null, clips: null, moments: null },
         delay: { streams: 0, clips: 0, moments: 0 },
-        actor: { status: 201, id: 'tsk_01J8SURFEXAMPLE00000000', problem: null, task: null, events: [] },
+        actor: { status: 201, id: 'tsk_01J8SURFEXAMPLE00000000', problem: null, task: null, events: [], handoffs: [], still: null, stillType: 'image/jpeg', stillStatus: 200 },
         requests: [],
         counts: { streams: 0, clips: 0, moments: 0, maps: 0, map: 0, actor: 0 },
     };
@@ -144,6 +144,21 @@ async function startUpstreams() {
             res.writeHead(200, { 'Content-Type': 'text/event-stream' });
             for (const event of state.actor.events) res.write(`id: ${event.seq}\nevent: ${event.kind}\ndata: ${JSON.stringify(event)}\n\n`);
             return res.end();
+        }
+        // The Computer still (plan 2026-11-07) and Take over / Give it back, as Actor answers them.
+        if (p === `/api/v1/tasks/${state.actor.id}/still` && req.method === 'GET') {
+            if (state.actor.stillStatus && state.actor.stillStatus !== 200) return json(state.actor.stillStatus, { code: 'actor.task.no_still', detail: 'This task has no Computer picture.' });
+            res.writeHead(200, { 'Content-Type': state.actor.stillType || 'image/jpeg' });
+            return res.end(state.actor.still || Buffer.from('/9j/4AAQ', 'base64'));
+        }
+        const hand = p.match(new RegExp(`^/api/v1/tasks/${state.actor.id}/(takeover|giveback)$`));
+        if (hand && req.method === 'POST') {
+            const action = hand[1];
+            state.actor.handoffs = (state.actor.handoffs || []).concat(action);
+            const task = { ...(state.actor.task || { id: state.actor.id, state: 'running', task: 'Surf the web' }) };
+            if (task.computer) task.computer = { ...task.computer, driving: action === 'takeover' };
+            state.actor.task = task;
+            return json(200, task);
         }
         return json(404, { error: 'not found' });
     });

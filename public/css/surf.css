@@ -220,6 +220,9 @@ html.ov-motion .sf-party-playing .sf-party-dot { animation: sf-pulse 1.6s ease-o
 
 /* Surf with Vibe: the task page (/web/t/:id): state, desk links, live steps as a timeline, sources, the report */
 .sf-desk-page { display: grid; gap: 14px; }
+/* The Computer's live still (plan 2026-11-07): size and aspect only; Opus designs the rest. */
+.ov-task-still { display: block; width: 100%; max-width: 320px; aspect-ratio: 16 / 9; object-fit: cover; }
+.ov-task-still[hidden] { display: none; }
 .sf-desk-head h1 { margin-bottom: 6px; }
 .sf-desk-query { margin: 0; font-size: 1.05rem; line-height: 1.5; color: var(--text-primary, #e6edf7); overflow-wrap: anywhere; }
 .sf-desk-state { display: inline-flex; align-items: center; gap: 8px; margin: 12px 0 0; padding: 5px 12px 5px 10px; border: 1px solid var(--border, #1f2d47); border-radius: 999px; background: var(--bg-secondary, #101828); font-size: .8rem; font-weight: 800; letter-spacing: .03em; text-transform: capitalize; }

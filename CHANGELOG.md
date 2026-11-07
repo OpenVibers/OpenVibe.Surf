@@ -2,6 +2,20 @@
 
 What changed in OpenVibe.Surf, newest first. Each site also publishes its patch notes at /updates.
 
+## Unreleased — one Computer
+
+- **The task card shows the Computer** (plan 2026-11-07: "Surf, Computer and Actor are one experience"): the card
+  reads the task's `computer` (`session_id`, `machine`, `where`, `cost_hint`, `driving`) and puts the machine and the
+  cost where it says where the work happens. While the task runs it shows the Computer's newest frame as an
+  `<img class="ov-task-still">`, refreshed every 2 s only while the page is visible, stopping when the task ends or
+  the tab is hidden. It is a same-origin proxy (`GET /api/v1/web/tasks/:id/still`) so the person's token stays in its
+  cookie; Actor answers `404` for another person's task, and the picture is `Cache-Control: private, no-store`.
+- **Take over / Give it back** are now one API on the task: the card's button posts to Actor (`/takeover`,
+  `/giveback`) through this site (`POST /api/v1/web/tasks/:id/takeover` and `…/giveback`, same-origin only). Take over
+  goes to the desk's own page; Give it back returns to the card, which then says so. No new layout: the existing
+  Take over control and one `.ov-task-still` size rule.
+- The Dock's step carries the same `computer` (server/web/agent-step.js).
+
 ## Unreleased — watch together
 
 - **Home Watch scene** (`server/views/index.js`, `server/http/pages.js`): the home no longer shows the written-in

@@ -23,6 +23,8 @@ function agentStepOf(task, { status = null, baseUrl = 'https://openvibe.surf', s
     const state = STATUS_OF[status] || status || STATUS_OF[task.state] || 'running';
     const base = String(baseUrl || 'https://openvibe.surf').replace(/\/+$/, '');
     const cost = costUsd == null && task.cost ? Number(task.cost.usd) : costUsd;
+    // The one Computer (plan 2026-11-07): the Dock's step reads the same object the task record carries, never a copy.
+    const computer = task.computer && typeof task.computer === 'object' ? task.computer : null;
     return {
         step_id: String(task.id),
         mode: 'browse',
@@ -32,7 +34,8 @@ function agentStepOf(task, { status = null, baseUrl = 'https://openvibe.surf', s
         status: state,
         started_at: new Date(startedAt == null ? Date.now() : startedAt).toISOString(),
         ended_at: ENDED.has(state) ? new Date(endedAt == null ? Date.now() : endedAt).toISOString() : null,
-        placement: { where: 'On a private desk', why: 'it browses for you, never with your accounts, and stops at logins and anything that would spend money' },
+        placement: { where: computer ? computer.machine : 'On a private desk', why: 'it browses for you, never with your accounts, and stops at logins and anything that would spend money' },
+        ...(computer ? { computer } : {}),
         cost_usd: Number.isFinite(cost) && cost >= 0 ? cost : null,
         link: `${base}/web/t/${encodeURIComponent(String(task.id))}`,
         reason: state === 'failed' || state === 'stopped' ? (reason == null ? null : String(reason).slice(0, 240)) : null,
