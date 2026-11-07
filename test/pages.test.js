@@ -188,7 +188,8 @@ const { assetVersion } = require('../server/assets');
         assert.match(csp, /frame-src 'self' https:\/\/openvibe\.games https:\/\/openvibe\.live/);
         assert.match(csp, /media-src 'self' https:\/\/openvibe\.media https:\/\/edge\.openvibe\.media https:\/\/\*\.r2\.cloudflarestorage\.com https:\/\/\*\.backblazeb2\.com blob:/);
         assert.match(csp, /connect-src [^;]*https:\/\/openvibe\.media/, 'hls.js fetches Media\'s playlists and segments');
-        assert.match(csp, /connect-src 'self' https:\/\/openvibe\.network https:\/\/cloudflareinsights\.com https:\/\/openvibe\.events/);
+        // OpenVibe.Chat too: the navbar's Messages count (openvibe-shared 4.130.0).
+        assert.match(csp, /connect-src 'self' https:\/\/openvibe\.network https:\/\/openvibe\.chat https:\/\/cloudflareinsights\.com https:\/\/openvibe\.events/);
     });
 
     await check('health and readiness are honest; a Network outage is degraded, not down', async () => {
