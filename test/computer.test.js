@@ -44,6 +44,13 @@ const COMPUTER = { session_id: 'ses_01JAB2C3D4E5F6G7H8J9K0MNPQR', machine: 'a sh
             const sent = t.upstreams.lastFor(`/api/v1/tasks/${id}/still`);
             assert.strictEqual(sent.headers.authorization, `Bearer ${token}`);
             assert.strictEqual((await t.get(`/api/v1/web/tasks/${id}/still`)).status, 401, 'signed out');
+            // A broken or hostile upstream cannot serve HTML from openvibe.surf.
+            t.upstreams.state.actor.stillType = 'text/html';
+            const bad = await t.get(`/api/v1/web/tasks/${id}/still`, { cookie: signedIn });
+            assert.strictEqual(bad.status, 502, bad.text);
+            assert.strictEqual(bad.json().code, 'still.bad_type');
+            assert.ok(!bad.text.includes('<html'));
+            t.upstreams.state.actor.stillType = 'image/jpeg';
         });
 
         await check('another person\'s task is the same 404 as a missing one', async () => {

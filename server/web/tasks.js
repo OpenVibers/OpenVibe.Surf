@@ -105,8 +105,9 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console, steps 
             throw Object.assign(new Error('OpenVibe.Actor did not answer.'), { status: 502 });
         }
         if (!res.ok) throw Object.assign(new Error(res.status === 404 ? 'No picture.' : 'The desk is not reachable.'), { status: res.status === 404 || res.status === 401 ? res.status : 502 });
+        // Only a picture: a broken or hostile upstream can never serve HTML from openvibe.surf.
         const type = String(res.headers.get('content-type') || '').split(';')[0].trim();
-        if (!/^image\/(jpeg|png)$/.test(type)) throw Object.assign(new Error('No picture.'), { status: 502 });
+        if (!/^image\/(jpeg|png|webp)$/.test(type)) throw Object.assign(new Error('The desk sent something that is not an image.'), { status: 502, code: 'still.bad_type' });
         const bytes = Buffer.from(await res.arrayBuffer());
         if (!bytes.length) throw Object.assign(new Error('No picture.'), { status: 404 });
         return { status: 200, type, bytes };

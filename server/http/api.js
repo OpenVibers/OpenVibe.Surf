@@ -119,6 +119,8 @@ function createApi(ctx) {
     r.get('/v1/web/tasks/:id/still', requireToken, async (req, res) => {
         try {
             const shot = await web.still({ token: req.webToken, id: req.params.id });
+            // Only a picture: a broken or hostile upstream can never serve HTML from openvibe.surf.
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(shot.type)) return problem(req, res, 502, 'still.bad_type', 'The desk sent something that is not an image.');
             res.set('Cache-Control', 'private, no-store');
             res.set('X-Content-Type-Options', 'nosniff');
             res.set('Content-Type', shot.type);
