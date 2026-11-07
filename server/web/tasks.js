@@ -17,6 +17,7 @@
  * pass through. A timeout or a 5xx is this service's 502.
  */
 const crypto = require('crypto');
+const { createAgentSteps } = require('./agent-step');
 
 const MIN_QUERY = 3;
 const MAX_QUERY = 500;
@@ -39,11 +40,13 @@ function newIdempotencyKey() {
     return `surf:web:${crypto.randomBytes(16).toString('hex')}`;
 }
 
-function createWeb({ config, fetchImpl = globalThis.fetch, log = console }) {
+function createWeb({ config, fetchImpl = globalThis.fetch, log = console, steps = null }) {
+    // The agent's step (design 2026-11-07): the browsing task is the Browse step of the one timeline behind the Dock.
+    const agentSteps = steps || createAgentSteps({ config, log });
     const taskPath = (id) => `${config.actorInternalUrl}/api/v1/tasks/${encodeURIComponent(id)}`;
     const headers = (token) => ({ Accept: 'application/json', Authorization: `Bearer ${token}` });
 
-    async function task({ token, id }) {
+    async function task({ token, id, subject = null }) {
         if (!token) throw Object.assign(new Error('Sign in to see your task.'), { status: 401 });
         if (!TASK_ID.test(String(id || ''))) throw Object.assign(new Error('Task not found.'), { status: 404 });
         let res;
@@ -56,6 +59,8 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console }) {
         let data;
         try { data = await res.json(); } catch { /* invalid Actor response */ }
         if (!data || data.id !== id) throw Object.assign(new Error('OpenVibe.Actor sent an invalid task.'), { status: 502 });
+        // A read of the task's own page is how Surf sees its outcome: publish the new state, once per state.
+        agentSteps.note(data, { subject }).catch(() => {});
         return data;
     }
 
@@ -89,7 +94,7 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console }) {
      * Create one task for the person whose token this is. Resolves { task_id, page } (Surf's task page) or throws
      * { status, code, detail, actor } — a 4xx from Actor keeps its status and detail.
      */
-    async function createTask({ token, query, idempotencyKey = null } = {}) {
+    async function createTask({ token, query, idempotencyKey = null, subject = null } = {}) {
         if (!token) throw Object.assign(new Error('Sign in to surf the web.'), { status: 401, code: 'token.required' });
         if (!validQuery(query)) throw Object.assign(new Error('query must be 3 to 500 characters.'), { status: 400, code: 'web.invalid_query' });
         const key = IDEMPOTENCY.test(String(idempotencyKey || '')) ? String(idempotencyKey) : newIdempotencyKey();
@@ -130,6 +135,7 @@ function createWeb({ config, fetchImpl = globalThis.fetch, log = console }) {
             log.warn('[OpenVibe.Surf] Actor answered without a task id');
             throw Object.assign(new Error('OpenVibe.Actor answered without a task id.'), { status: 502, code: 'actor.invalid_response' });
         }
+        agentSteps.note(data, { subject }).catch(() => {});
         return { task_id: id, page: `/web/t/${encodeURIComponent(id)}` };
     }
 
