@@ -316,17 +316,26 @@ function webTask({ task, actorUrl } = {}) {
     const id = String(task.id);
     const actor = `${String(actorUrl).replace(/\/+$/, '')}/tasks/${encodeURIComponent(id)}`;
     const desk = deskUrl(task.desk && task.desk.url);
+    // The one Computer (plan 2026-11-07): the same object the task record and the Dock's step carry.
+    const computer = task.computer && typeof task.computer === 'object' ? task.computer : null;
+    const driving = !!(computer && computer.driving);
     const sources = task.result && Array.isArray(task.result.sources) ? task.result.sources.map(safeWebUrl).filter(Boolean) : [];
     const report = task.result && typeof task.result.answer === 'string' ? task.result.answer : '';
     const state = String(task.state || 'queued');
     const open = ['queued', 'running', 'verifying'].includes(state);
+    const where = computer
+        ? `On ${computer.machine}${computer.cost_hint ? ` · ${computer.cost_hint}` : ''}`
+        : desk ? 'On a private desk: a real browser of its own' : open ? 'Searching and reading; no desk open' : 'Searched and read the web';
     const body = `<div class="sf-wrap sf-page-pad sf-narrow sf-desk-page sf-task" data-sf-desk-task="${esc(id)}" data-sf-desk-open="${open ? '1' : '0'}" data-state="${esc(state)}">
 <header class="sf-task-head"><p class="sf-kicker">Surf with Vibe</p><h1 class="sf-task-q">${esc(task.task || 'Your web task')}</h1></header>
 <section class="sf-task-card" aria-label="What your agent is doing">
 <p class="sf-task-now"><span class="sf-task-dot" aria-hidden="true"></span><b data-sf-desk-state role="status">${esc(TASK_STATE[state] || state)}</b><span class="sf-task-latest" data-sf-desk-latest>${open ? 'Your agent is on it.' : ''}</span></p>
-<p class="sf-task-where">${kit.icon('globe')}<span data-sf-desk-note>${desk ? 'On a private desk: a real browser of its own' : open ? 'Searching and reading; no desk open' : 'Searched and read the web'}</span></p>
+<p class="sf-task-where">${kit.icon('globe')}<span data-sf-desk-note>${esc(where)}</span></p>
+<img class="ov-task-still" data-sf-desk-still data-src="/api/v1/web/tasks/${esc(id)}/still" alt="Your agent's screen now" width="320" height="180" hidden>
 <p class="sf-task-needs" data-sf-desk-needs${task.needs_you ? '' : ' hidden'}>${esc(task.needs_you && task.needs_you.what || '')}</p>
-<p class="sf-task-acts" data-sf-desk-links${desk ? '' : ' hidden'}><a class="ovk-btn ovk-btn--primary sf-desk-takeover" data-sf-desk-takeover href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Take over</a><a class="ovk-btn sf-desk-watch" data-sf-desk-watch href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Watch the desk</a></p>
+<form class="sf-task-takeover" method="post" action="/api/v1/web/tasks/${esc(id)}/takeover" data-sf-desk-takeover-form${desk && open && !driving ? '' : ' hidden'}><button class="ovk-btn ovk-btn--primary sf-desk-takeover" type="submit" data-sf-desk-takeover>Take over</button></form>
+<form class="sf-task-giveback" method="post" action="/api/v1/web/tasks/${esc(id)}/giveback" data-sf-desk-giveback-form${driving ? '' : ' hidden'}><button class="ovk-btn sf-desk-takeover" type="submit" data-sf-desk-giveback>Give it back</button></form>
+<p class="sf-task-acts" data-sf-desk-links${desk ? '' : ' hidden'}><a class="ovk-btn sf-desk-watch" data-sf-desk-watch href="${esc(desk || '#')}" target="_blank" rel="noopener noreferrer">Watch the desk</a></p>
 <p class="sf-task-more"><a href="${esc(actor)}" target="_blank" rel="noopener noreferrer">Open in Actor</a><span aria-hidden="true">·</span><a href="/web">Ask another</a></p>
 </section>
 <section class="sf-card sf-desk-report sf-task-answer" aria-labelledby="sf-desk-report-h"><h2 id="sf-desk-report-h">The answer</h2>

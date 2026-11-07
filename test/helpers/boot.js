@@ -67,11 +67,13 @@ async function boot(opts = {}) {
         if (o.json !== undefined) { body = JSON.stringify(o.json); headers['content-type'] = 'application/json'; }
         if (o.form !== undefined) { body = new URLSearchParams(o.form).toString(); headers['content-type'] = 'application/x-www-form-urlencoded'; }
         const res = await fetch(base + p, { method: o.method || (body ? 'POST' : 'GET'), headers, body, redirect: 'manual' });
-        const text = Buffer.from(await res.arrayBuffer()).toString('utf8');
+        const buffer = Buffer.from(await res.arrayBuffer());
+        const text = buffer.toString('utf8');
         return {
             status: res.status,
             headers: res.headers,
             text,
+            buffer,
             json() { return JSON.parse(text); },
         };
     }

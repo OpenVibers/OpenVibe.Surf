@@ -366,12 +366,58 @@
         var WORDS = { queued: 'Getting ready', running: 'Working', verifying: 'Checking the answer', succeeded: 'Done', done: 'Done', failed: 'Did not finish', stopped: 'Stopped', cancelled: 'Stopped' };
         var count = root.querySelector('[data-sf-desk-count]');
         var latest = root.querySelector('[data-sf-desk-latest]');
+        var still = root.querySelector('[data-sf-desk-still]');
+        var stillTimer = null;
+        var stillOpen = false;
+        // The still (plan 2026-11-07): the Computer's newest frame, every 2 s, only while the page is visible and the
+        // task runs. It is same-origin, so the person's cookie is the credential; hidden or ended, it never asks.
+        function tickStill() {
+            if (!still || !stillOpen || document.hidden) return;
+            var url = still.getAttribute('data-src');
+            if (!url) return;
+            still.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now();
+        }
+        function showStill(open) {
+            stillOpen = !!open;
+            if (!still) return;
+            still.hidden = !stillOpen;
+            if (stillOpen) {
+                if (!stillTimer) stillTimer = setInterval(tickStill, 2000);
+                if (!still.getAttribute('src')) tickStill();
+            } else {
+                if (stillTimer) clearInterval(stillTimer);
+                stillTimer = null;
+                still.removeAttribute('src');
+            }
+        }
+        if (still) still.addEventListener('error', function () { still.hidden = true; });
+        if (still) still.addEventListener('load', function () { if (stillOpen) still.hidden = false; });
+        document.addEventListener('visibilitychange', function () {
+            if (!still) return;
+            if (document.hidden) {
+                if (stillTimer) clearInterval(stillTimer);
+                stillTimer = null;
+            } else if (stillOpen && !stillTimer) {
+                stillTimer = setInterval(tickStill, 2000);
+                tickStill();
+            }
+        });
         function snapshot(t) {
             var st = t.state || 'running';
+            var open = ['queued', 'running', 'verifying'].includes(st);
+            var computer = t.computer && typeof t.computer === 'object' ? t.computer : null;
+            var driving = !!(computer && computer.driving);
             root.setAttribute('data-state', st);
             root.querySelector('[data-sf-desk-state]').textContent = WORDS[st] || st;
             var desk = botDesk(t.desk && t.desk.url);
-            root.querySelector('[data-sf-desk-note]').textContent = desk ? 'On a private desk: a real browser of its own' : ['queued', 'running', 'verifying'].includes(st) ? 'Searching and reading; no desk open' : 'Searched and read the web';
+            root.querySelector('[data-sf-desk-note]').textContent = computer
+                ? 'On ' + computer.machine + (computer.cost_hint ? ' · ' + computer.cost_hint : '')
+                : desk ? 'On a private desk: a real browser of its own' : open ? 'Searching and reading; no desk open' : 'Searched and read the web';
+            showStill(open && !!(computer && computer.session_id));
+            var takeForm = root.querySelector('[data-sf-desk-takeover-form]');
+            if (takeForm) takeForm.hidden = !(desk && open && !driving);
+            var giveForm = root.querySelector('[data-sf-desk-giveback-form]');
+            if (giveForm) giveForm.hidden = !driving;
             var links = root.querySelector('[data-sf-desk-links]');
             links.hidden = !desk;
             if (desk) {
@@ -401,6 +447,7 @@
             if (!['queued', 'running', 'verifying'].includes(t.state)) {
                 if (timer) clearInterval(timer);
                 if (stream) stream.close();
+                showStill(false);
                 root.setAttribute('data-sf-desk-open', '0'); root.querySelector('[data-sf-desk-steps-note]').textContent = 'The task has ended.';
                 if (latest) latest.textContent = '';
             }
