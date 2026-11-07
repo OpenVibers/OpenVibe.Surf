@@ -29,7 +29,8 @@ OpenVibe.Surf is the Surf room. One room, three surfs:
 
 `GET /api/v1/watch/feed?topic=all|live|clips|moments&cursor=`
 
-Merges three public OpenVibe.Live reads (`OV_LIVE_INTERNAL_URL`, default `http://127.0.0.1:3000`):
+Merges three public OpenVibe.Live reads (`OV_LIVE_INTERNAL_URL`, default `http://127.0.0.1:3000`). The home's
+Watch scene is the head of this same feed, fetched server-side, so it never shows a written-in channel:
 
 | Source | Live route | What it gives |
 |---|---|---|
@@ -125,7 +126,7 @@ its status and prints its words. It is `private, no-store`; a `GET /web/go` star
 
 | Route | What it is |
 |---|---|
-| `/` | the Surf room: the run motif (ramps, speed lines, a ticking timer), the three tiles under the hero, scenes, questions |
+| `/` | the Surf room: the run motif (ramps, speed lines, a ticking timer), the three tiles under the hero, scenes (the Watch scene is the real Live feed's first cards), questions |
 | `/ride` | the maps with tier, stages, runs and the record, and the embed of the first map |
 | `/ride/:map` | one map: name, tier, stages, records if Games answers, the embed |
 | `/watch` | the TV: the screen plays clips and moments in the page (HLS), the guide lists every channel; ↑ ↓, a swipe or a tap changes channel; a live stream that records to MP4 plays over Media's DVR playlist, a little behind live, and any other opens on its channel; **Watch together** opens a party |

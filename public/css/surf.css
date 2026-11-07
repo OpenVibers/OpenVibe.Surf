@@ -82,7 +82,10 @@ html.ov-motion .sf-run-speed i { animation: sf-speed 1.1s linear infinite; anima
 .sf-demo-screen { position: relative; display: flex; align-items: flex-end; gap: 8px; aspect-ratio: 16 / 6; max-height: 210px; padding: 12px; border-radius: 12px; color: #fff; font-weight: 700; font-size: .85rem;
     background: radial-gradient(120% 120% at 70% 30%, color-mix(in srgb, var(--room-accent) 45%, transparent), transparent 60%), linear-gradient(160deg, #1e293b, #0b1020); }
 .sf-demo-tv ul { list-style: none; margin: 0; padding: 0 4px; display: grid; gap: 4px; font-size: .82rem; color: var(--text-secondary, #96a7c2); }
+.sf-demo-tv a { color: inherit; text-decoration: none; }
+.sf-demo-tv a:hover, .sf-demo-tv a:focus-visible { text-decoration: underline; }
 .sf-pill-live { padding: 1px 7px; border-radius: 5px; background: var(--live-red, #e11d48); color: #fff; font-size: .68rem; font-weight: 800; }
+.sf-pill-live--clip, .sf-pill-live--moment { background: var(--room-accent, #00bef6); }
 
 /* Ride: map cards. */
 .sf-maps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }

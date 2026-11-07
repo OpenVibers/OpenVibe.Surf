@@ -27,6 +27,64 @@ const { assetVersion } = require('../server/assets');
         assert.ok(org && Array.isArray(org.sameAs) && org.sameAs.includes('https://github.com/OpenVibers'), 'home has the OpenVibe Organization');
         assert.strictEqual(r.headers.get('cache-control'), 'public, max-age=60');
         assert.match(r.headers.get('vary'), /Cookie/i);
+        // The Watch scene is the real Live guide, not a written-in example channel.
+        assert.match(r.text, /id="sf-home-watch"/);
+        assert.match(r.text, /href="https:\/\/openvibe\.live\/@bo"/, 'the busiest live stream links to its channel');
+        assert.match(r.text, /Surf practice, all day/);
+        assert.match(r.text, /<span class="sf-pill-live sf-pill-live--live">LIVE<\/span>/);
+        assert.ok(!/goosely|Night owls|Robot build/.test(r.text), 'no fake stream, channel or clip on the home');
+    });
+
+    await check('the home says nobody is live and shows the latest clip when Live has no streams', async () => {
+        t.ctx.feed.clear();
+        const streams = t.upstreams.state.streams;
+        const clips = t.upstreams.state.clips;
+        const moments = t.upstreams.state.moments;
+        t.upstreams.state.streams = [];
+        t.upstreams.state.moments = [];
+        t.upstreams.state.clips = [{ id: 101, href: 'https://openvibe.video/c/101', title: 'Kickflip over the pier', created_at: '2026-10-28T09:00:00.000Z', channel: { username: 'ada', display_name: 'Ada' }, preview_url: 'https://openvibe.media/c/101/master.m3u8' }];
+        const r = await t.get('/');
+        t.upstreams.state.streams = streams;
+        t.upstreams.state.clips = clips;
+        t.upstreams.state.moments = moments;
+        t.ctx.feed.clear();
+        assert.strictEqual(r.status, 200, r.text);
+        assert.match(r.text, /Nobody is live right now/);
+        assert.match(r.text, /@ada · Kickflip over the pier/);
+        assert.match(r.text, /href="https:\/\/openvibe\.video\/c\/101"/, 'the clip links to its Video page');
+        assert.match(r.text, /<span class="sf-pill-live sf-pill-live--clip">CLIP<\/span>/);
+        assert.ok(!/placeholder|Unknown channel|goosely/.test(r.text));
+    });
+
+    await check('the home is honest when no Live source answers and when every source is empty', async () => {
+        t.ctx.feed.clear();
+        t.upstreams.state.fail.streams = 503;
+        t.upstreams.state.fail.clips = 503;
+        t.upstreams.state.fail.moments = 503;
+        const down = await t.get('/');
+        t.upstreams.state.fail.streams = null;
+        t.upstreams.state.fail.clips = null;
+        t.upstreams.state.fail.moments = null;
+        t.ctx.feed.clear();
+        assert.strictEqual(down.status, 200, down.text);
+        assert.match(down.text, /OpenVibe\.Live did not answer just now/);
+        assert.match(down.text, /href="\/watch"/);
+        assert.ok(!/goosely|Night owls|Robot build|Unknown channel/.test(down.text));
+
+        const streams = t.upstreams.state.streams;
+        const clips = t.upstreams.state.clips;
+        const moments = t.upstreams.state.moments;
+        t.upstreams.state.streams = [];
+        t.upstreams.state.clips = [];
+        t.upstreams.state.moments = [];
+        const empty = await t.get('/');
+        t.upstreams.state.streams = streams;
+        t.upstreams.state.clips = clips;
+        t.upstreams.state.moments = moments;
+        t.ctx.feed.clear();
+        assert.strictEqual(empty.status, 200, empty.text);
+        assert.match(empty.text, /Nobody is live right now, and there is no clip up yet/);
+        assert.ok(!/goosely|Night owls|Robot build|Unknown channel/.test(empty.text));
     });
 
     await check('/ride lists the maps and embeds the first', async () => {

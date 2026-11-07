@@ -4,7 +4,7 @@
  * JavaScript; public/js/surf.js adds the TV (HLS in the page, ↑ ↓ and swipe to change channel), the Web form's
  * in-page start, and the home's ticking timer.
  *
- *   home()                          the front door: the run motif, three tiles under one Start, scenes, questions
+ *   home({ feed })                  the front door: the run motif, three tiles under one Start, scenes, questions
  *   ride({ maps, games })           every map as a card, and the first one to play
  *   map({ id, map, top, games })    one map: tier, stages, author, the game, its fastest runs
  *   watch({ feed, topic })          the TV: what is on now, the guide (up next), topics
@@ -47,7 +47,40 @@ function runMotif() {
 </div>`;
 }
 
-function home() {
+const TV_PREVIEW_MAX = 3;
+const previewKind = (it) => (it && it.kind === 'moment' ? 'moment' : it && it.kind === 'clip' ? 'clip' : 'live');
+const PREVIEW_PILL = { live: 'LIVE', clip: 'CLIP', moment: 'AI MOMENT' };
+const previewPage = (it) => (it && it.play && /^https?:\/\//.test(String(it.play.page || '')) ? it.play.page : '/watch');
+
+/**
+ * The Watch scene on the home: the same real Live guide as /watch, cut to its first cards. Nothing is invented: a
+ * card is only rendered for an item the feed returned, and every card links to the item's own Live or Video page.
+ * With no live streams but clips to show it says so ("Nobody is live right now") and shows the latest clip; with
+ * nothing at all it says that, honestly, instead of inventing a channel.
+ */
+function homeWatch(feed) {
+    const items = feed && Array.isArray(feed.items) ? feed.items.slice(0, TV_PREVIEW_MAX) : [];
+    if (!items.length) {
+        const missing = !feed || !feed.sources || feed.sources.live !== 'ok';
+        const note = missing
+            ? 'OpenVibe.Live did not answer just now. Watch again in a moment.'
+            : 'Nobody is live right now, and there is no clip up yet. Check Watch again in a moment.';
+        return `<div class="sf-demo-tv" id="sf-home-watch"><div class="sf-demo-screen"><span class="sf-pill-live">${missing ? 'OFFLINE' : 'OFF AIR'}</span><span>${esc(note)}</span></div><ul><li><a href="/watch"><b>Open Watch</b> Live streams, clips and AI moments</a></li></ul></div>`;
+    }
+    const first = items[0];
+    const k = previewKind(first);
+    const who = first.channel && first.channel.username ? `@${first.channel.username}` : '';
+    const liveAnswered = !!(feed.sources && feed.sources.live === 'ok');
+    const quiet = k !== 'live' && liveAnswered ? 'Nobody is live right now · ' : '';
+    const screen = `<a class="sf-demo-screen" href="${esc(previewPage(first))}"><span class="sf-pill-live sf-pill-live--${esc(k)}">${PREVIEW_PILL[k]}</span><span>${esc(quiet)}${who ? `${esc(who)} · ` : ''}${esc(first.title || '')}</span></a>`;
+    const rows = items.slice(1).map((it) => {
+        const rwho = it.channel && it.channel.username ? `@${it.channel.username} · ` : '';
+        return `<li><a href="${esc(previewPage(it))}"><b>Up next</b> ${esc(rwho)}${esc(it.title || '')}</a></li>`;
+    }).join('');
+    return `<div class="sf-demo-tv" id="sf-home-watch">${screen}${rows ? `<ul>${rows}</ul>` : ''}</div>`;
+}
+
+function home({ feed = null } = {}) {
     const tiles = `<ul class="sf-tiles" id="sf-tiles">
 <li class="sf-tile" id="sf-tile-ride" data-sf-surf="ride"><a href="/ride"><span class="sf-tile-ic">${kit.icon('game')}</span><b>Ride</b><span>CS-style surf in the browser: ramps, a millisecond timer, your ghost and the record.</span><span class="sf-tile-go">Ride a map${kit.icon('chevron')}</span></a></li>
 <li class="sf-tile" id="sf-tile-web" data-sf-surf="web"><a href="/web"><span class="sf-tile-ic">${kit.icon('globe')}</span><b>Web</b><span>Surf with Vibe: say what you want, an agent browses for you and reports back with its sources.</span><span class="sf-tile-go">Ask Vibe${kit.icon('chevron')}</span></a></li>
@@ -70,7 +103,7 @@ function home() {
                 html: `<ol class="sf-demo-steps"><li class="is-done">Searched the web for “Lisbon in March, cheap flights”</li><li class="is-done">Read 4 pages · compared prices on 2 sites</li><li class="is-now">Writing the report with its sources…</li></ol>`,
                 action: { href: '/web', label: 'Ask Vibe' } },
             { title: 'Lean back and surf what is on', text: 'Live streams first, then the clips people cut and the AI moments of the week, each saying why it is on. Swipe on a phone or press ↑ ↓ on a keyboard.',
-                html: `<div class="sf-demo-tv"><div class="sf-demo-screen"><span class="sf-pill-live">LIVE</span><span>goosely · Night owls: Seattle walk</span></div><ul><li><b>Up next</b> Top AI moment this week</li><li>New clip · Robot build, part 2</li></ul></div>`,
+                html: homeWatch(feed),
                 action: { href: '/watch', label: 'Start watching' } },
         ],
         explore: { title: 'More on Surf', items: [

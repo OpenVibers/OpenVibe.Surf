@@ -49,7 +49,11 @@ function createPageRoutes(ctx) {
     });
     const page = (res, status, html, viewer) => send(res, status, html, { viewer });
 
-    r.get('/', (req, res) => page(res, 200, views.home(), req.viewer));
+    r.get('/', async (req, res) => {
+        // The Watch scene on the home is the real Live guide, fetched server-side (the feed caches 30 s).
+        const out = await safe(() => feed.feed('all'));
+        return page(res, 200, views.home({ feed: out }), req.viewer);
+    });
 
     r.get('/ride', async (req, res) => {
         const out = await safe(() => ride.maps());
