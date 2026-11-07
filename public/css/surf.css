@@ -228,7 +228,10 @@ html.ov-motion .sf-party-playing .sf-party-dot { animation: sf-pulse 1.6s ease-o
 .sf-task-screen { position: relative; margin: 4px 0 0; max-width: 420px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border, #1f2d47);
     background: #05070c; box-shadow: 0 10px 28px rgba(0, 0, 0, .28); }
 .sf-task-screen:has(.ov-task-still[hidden]) { display: none; }
-.sf-task-screen figcaption { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 8px; padding: 18px 10px 8px;
+.sf-task-screen-open { display: block; color: inherit; }
+.sf-task-screen-open[href]:focus-visible { outline: 3px solid var(--accent, #38bdf8); outline-offset: -3px; }
+.sf-task-screen:has(.sf-task-screen-open[href]) figcaption::after { content: "Open \2197"; flex: none; margin-left: auto; opacity: .85; }
+.sf-task-screen figcaption { pointer-events: none; position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 8px; padding: 18px 10px 8px;
     font-size: .8rem; font-weight: 700; color: #e6edf7; background: linear-gradient(to top, rgba(0, 0, 0, .72), transparent); }
 .sf-task-screen figcaption > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sf-task-live { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: #dc2626; color: #fff;
