@@ -444,6 +444,10 @@
                 li.appendChild(a); list.appendChild(li);
             });
             root.querySelector('[data-sf-desk-sources-empty]').hidden = !!list.children.length;
+            var acts = root.querySelector('[data-sf-answer-acts]');
+            var finalAnswer = t.result && typeof t.result.answer === 'string' ? t.result.answer : '';
+            if (acts) acts.hidden = !finalAnswer;
+            if (!open && !finalAnswer) root.querySelector('[data-sf-desk-report-empty]').textContent = 'Your agent finished without an answer. Every step below shows how far it got.';
             var answer = t.result && typeof t.result.answer === 'string' ? t.result.answer : '';
             root.querySelector('[data-sf-desk-report]').textContent = answer;
             root.querySelector('[data-sf-desk-report-empty]').hidden = !!answer;
@@ -455,6 +459,18 @@
                 if (latest) latest.textContent = '';
             }
         }
+        // Copy the answer, with its sources numbered as they show (Opus, 11-07: Surf's result page).
+        var copyBtn = root.querySelector('[data-sf-answer-copy]');
+        if (copyBtn) copyBtn.addEventListener('click', function () {
+            var text = (root.querySelector('[data-sf-desk-report]') || {}).textContent || '';
+            var links = Array.prototype.map.call(root.querySelectorAll('[data-sf-desk-sources] a'), function (a, i) { return (i + 1) + '. ' + a.href; });
+            if (links.length) text += '\n\nSources:\n' + links.join('\n');
+            if (!navigator.clipboard || !text.trim()) return;
+            navigator.clipboard.writeText(text.trim()).then(function () {
+                copyBtn.textContent = 'Copied';
+                setTimeout(function () { copyBtn.textContent = 'Copy the answer'; }, 1500);
+            }, function () {});
+        });
         function refresh() {
             fetch(base, { credentials: 'same-origin', headers: { accept: 'application/json' } })
                 .then(function (r) { if (!r.ok) throw new Error('Task unavailable'); return r.json(); })
