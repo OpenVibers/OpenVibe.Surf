@@ -4,6 +4,11 @@ What changed in OpenVibe.Surf, newest first. Each site also publishes its patch 
 
 ## Unreleased — watch together
 
+- **Home Watch scene** (`server/views/index.js`, `server/http/pages.js`): the home no longer shows the written-in
+  `goosely · Night owls: Seattle walk` card. It fetches the head of the real `GET /api/v1/watch/feed` server-side
+  (the feed's own 30 s cache) and renders the live, clip or AI moment cards, each linked to its Live or Video page.
+  With no live streams it says "Nobody is live right now" over the latest clip; with no source at all it says so.
+- **Tests:** `test/pages.test.js` pins the real card/link, the no-live state and the all-empty state.
 - **Watch together** (`server/watch/party.js`, `server/http/party.js`, `server/views/index.js`,
   `public/js/surf.js`): a signed-in person opens a party (`POST /watch/party`) and shares an unguessable
   `/watch/p/<id>` link. The page reuses the TV markup with a `sf-party-` bar (members, host, Share, Leave); the
