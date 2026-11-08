@@ -91,7 +91,7 @@ function home({ feed = null } = {}) {
         room: 'surf',
         hero: {
             title: ROOM.line,
-            lede: 'Three surfs in one room. Ride Counter-Strike-style surf maps right in the browser and race the clock, let an agent surf the web for you and bring back what it found, or lean back and surf what is on across OpenVibe.',
+            lede: 'Ride surf maps in the browser and race the clock, send an agent to surf the web for you, or lean back and surf what is on across OpenVibe.',
             start: { href: '/ride', label: 'Start riding' },
             motif: runMotif(),
         },
