@@ -9,7 +9,7 @@ const assert = require('assert');
 const { boot, check, done } = require('./helpers/boot');
 
 const ORIGIN = 'https://openvibe.surf';
-const DESK = `https://openvibe.bot/machines/dev_${'A'.repeat(26)}/screen?desk=desk-surf`;
+const DESK = `https://openvibe.link/machines/dev_${'A'.repeat(26)}/screen?desk=desk-surf`;
 const COMPUTER = { session_id: 'ses_01JAB2C3D4E5F6G7H8J9K0MNPQR', machine: 'a shared desk host', where: 'network', cost_hint: 'a desk host, metered by the minute', driving: false };
 
 (async () => {

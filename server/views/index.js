@@ -296,7 +296,7 @@ const safeWebUrl = (value) => {
 };
 const deskUrl = (value) => {
     const url = safeWebUrl(value);
-    return url && new URL(url).origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(new URL(url).pathname) ? url : null;
+    return url && new URL(url).origin === 'https://openvibe.link' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(new URL(url).pathname) ? url : null;
 };
 
 // The words a person reads for each state (the same in surf.js).

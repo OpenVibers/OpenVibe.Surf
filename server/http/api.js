@@ -136,7 +136,7 @@ function createApi(ctx) {
     const deskUrl = (value) => {
         try {
             const u = new URL(String(value || ''));
-            return u.origin === 'https://openvibe.bot' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(u.pathname) ? u.href : null;
+            return u.origin === 'https://openvibe.link' && /^\/machines\/dev_[0-9A-HJKMNP-TV-Z]{26}\/screen$/.test(u.pathname) ? u.href : null;
         } catch { return null; }
     };
     for (const action of ['takeover', 'giveback']) {

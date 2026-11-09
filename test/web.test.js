@@ -135,7 +135,7 @@ const ORIGIN = 'https://openvibe.surf';
     });
 
     await check('the Surf task page shows the private desk link, cited sources and report', async () => {
-        const desk = `https://openvibe.bot/machines/dev_${'A'.repeat(26)}/screen?desk=desk-surf`;
+        const desk = `https://openvibe.link/machines/dev_${'A'.repeat(26)}/screen?desk=desk-surf`;
         t.upstreams.state.actor.task = {
             id: t.upstreams.state.actor.id, state: 'succeeded', task: '<find a flight>',
             desk: { url: desk, kind: 'browser' }, needs_you: { what: 'Sign in on the desk.' },
@@ -149,7 +149,7 @@ const ORIGIN = 'https://openvibe.surf';
         assert.match(r.text, /https:\/\/example.com\/flight/);
         assert.doesNotMatch(r.text, /javascript:alert/);
         assert.match(r.text, /Take over/);
-        assert.match(r.text, /openvibe\.bot\/machines/);
+        assert.match(r.text, /openvibe\.link\/machines/);
         assert.match(r.text, /openvibe\.actor\/tasks/);
         assert.ok(!r.text.includes(token));
         // The result page (Opus, 11-07): the answer carries Copy and a follow-up that starts a new ask about this task.
