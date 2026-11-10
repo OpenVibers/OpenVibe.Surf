@@ -2,6 +2,9 @@
 
 > Ride maps, surf the web, surf what's on.
 
+**Live site:** https://openvibe.surf · **API docs:** https://openvibe.services · **For AI:** https://openvibe.surf/llms.txt
+**Run it:** `npm ci && npm run dev` (Node 22 or newer) · **Tests:** `npm test`
+
 **Status:** v1, the three-surf front (v0.1.0, see [STATUS.json](STATUS.json)).
 **Domain:** `openvibe.surf` · **Port:** 5110 · **Service id:** `surf` · **Env prefix:** `SURF`
 **License:** AGPL-3.0-only (the same as every OpenVibe service).
