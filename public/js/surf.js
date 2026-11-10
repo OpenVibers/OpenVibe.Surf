@@ -5,7 +5,7 @@
  *   - Home: the run motif's timer and speed tick. */
 (function () {
     'use strict';
-    var reduced = function () { try { return matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.ovMotion === 'reduced'; } catch (e) { return false; } };
+    var reduced = function () { try { return document.documentElement.getAttribute('data-ov-motion') === 'off'; } catch (e) { return false; } };
 
     // ── Home: the run's timer ─────────────────────────────────
     function runMotif() {
