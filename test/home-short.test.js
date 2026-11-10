@@ -35,6 +35,8 @@ const { boot, check, done } = require('./helpers/boot');
             assert.ok(!/pick-pane \{ display: none/.test(css), 'no scene is hidden');
             assert.match(css, /\.pick-chip \{[^}]*min-height: 44px/, 'a chip is a 44 px target');
             assert.match(css, /\.sf-tiles \{ display: flex; overflow-x: auto;/, 'the three doors are one sideways row');
+            assert.match(css, /@media \(max-width: 759px\) \{ \.sc-room-pic \.sf-run-hud \{ display: none; \} \}/, 'only the unreadable timer is left out on a phone');
+            assert.ok(!/\.sc-room-pic \.sf-run-speed \{ display: none/.test(css), 'the run motif\'s speed lines keep playing on a phone');
         });
 
         await check('the questions are a fold, open in the page and closed on a phone', async () => {
