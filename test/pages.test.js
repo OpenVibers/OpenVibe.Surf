@@ -186,6 +186,7 @@ const { assetVersion } = require('../server/assets');
         const r = await t.get('/');
         const csp = r.headers.get('content-security-policy') || '';
         assert.match(csp, /frame-src 'self' https:\/\/openvibe\.games https:\/\/openvibe\.live/);
+        assert.match(csp, /frame-src[^;]* https:\/\/openvibe\.network(?:;|$)/, 'the navbar may check Network on a typed arrival');
         assert.match(csp, /media-src 'self' https:\/\/openvibe\.media https:\/\/edge\.openvibe\.media https:\/\/\*\.r2\.cloudflarestorage\.com https:\/\/\*\.backblazeb2\.com blob:/);
         assert.match(csp, /connect-src [^;]*https:\/\/openvibe\.media/, 'hls.js fetches Media\'s playlists and segments');
         // OpenVibe.Chat too: the navbar's Messages count (openvibe-shared 4.130.0).

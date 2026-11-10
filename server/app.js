@@ -101,7 +101,7 @@ function createApp(opts = {}) {
                 // hls.js fetches Media's playlists and segments, which may redirect to R2 or B2 (as openvibe.video's CSP).
                 connectSrc: ["'self'", 'https://openvibe.network', 'https://openvibe.chat', 'https://cloudflareinsights.com', 'https://openvibe.events', 'https://openvibe.media', 'https://edge.openvibe.media', 'https://*.r2.cloudflarestorage.com', 'https://*.backblazeb2.com'],
                 // Ride embeds a Games map; Watch may embed Live's player when Live has one.
-                frameSrc: ["'self'", 'https://openvibe.games', 'https://openvibe.live'],
+                frameSrc: ["'self'", 'https://openvibe.games', 'https://openvibe.live', 'https://openvibe.network'],
                 // HLS clips play from the media edge (and a blob: URL a player may build).
                 mediaSrc: ["'self'", 'https://openvibe.media', 'https://edge.openvibe.media', 'https://*.r2.cloudflarestorage.com', 'https://*.backblazeb2.com', 'blob:'],
                 frameAncestors: ["'none'"],
