@@ -1,4 +1,5 @@
 'use strict';
+const { pick } = require('openvibe-shared/showcase');
 /**
  * The home on a phone (the owner's short-pages rule, 2026-10-30): one or two screens, app-like.
  *
@@ -21,16 +22,11 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
  *   pickBlock({ key, label, head, panes })   head: the heading of the block, or '' when the block already has one.
  *                                           panes: [{ id, label, html }]
  */
-function pickBlock({ key, label, head = '', panes, bodyClass = '' }) {
-    // A pane with nothing to show is left out, so the chips and the rules that show them match the page.
-    panes = (panes || []).filter((p) => p.html);
-    if (!panes.length) return '';
-    // Every pane is shown (the owner, 2026-10-31: never hide content to shorten a page); the chips are links that jump
-    // to a pane. They used to be radio chips that showed one pane and hid the others.
-    const chips = panes.map((p) => `<a class="pick-chip" href="#${esc(p.id)}">${esc(p.label)}</a>`).join('');
-    const body = panes.map((p) => `<div class="pick-pane" id="${esc(p.id)}">${p.html}</div>`).join('');
-    const bar = `${head ? `<div class="pick-head"><h2>${esc(head)}</h2></div>` : ''}<nav class="pick-row" aria-label="${esc(label)}">${chips}</nav>`;
-    return `<div class="pick" id="pick-${esc(key)}"><div class="pick-bar">${bar}</div><div class="pick-body${bodyClass ? ' ' + esc(bodyClass) : ''}">${body}</div></div>`;
+// 4.228.0: Shared's showcase.pick() draws the block (tabs on a phone, every pane in the page, a link to a pane opens
+// it); this copy only jumped to a pane with chips, so a phone showed them all (the owner, 11-12). The ids are this
+// site's own, so its links keep working.
+function pickBlock({ key, label, head = '', headId = '', bodyClass = '', panes, checked = '' }) {
+    return pick({ key, label, head, headId, bodyClass, checked: checked ? checked : '', panes: (panes || []).map((p) => ({ id: p.id, label: p.label, html: p.html })) });
 }
 
 /** No longer needed (every pane shows): kept so a caller that still asks for the rules gets none. */
