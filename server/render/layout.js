@@ -23,11 +23,11 @@ const ROOM = rooms.get('surf');
 const esc = kit.esc;
 
 const NAV = [
-    { label: 'Home', href: '/', icon: 'fa-house' },
-    { label: 'Ride', href: '/ride', icon: 'fa-gamepad' },
-    { label: 'Watch', href: '/watch', icon: 'fa-play' },
-    { label: 'Web', href: '/web', icon: 'fa-globe' },
-    { label: 'Developers', href: '/developers', icon: 'fa-code', more: true },
+    { label: 'Home', href: '/', icon: 'home' },
+    { label: 'Ride', href: '/ride', icon: 'game' },
+    { label: 'Watch', href: '/watch', icon: 'play' },
+    { label: 'Web', href: '/web', icon: 'globe' },
+    { label: 'Developers', href: '/developers', icon: 'code', more: true },
 ];
 
 let RELEASE = 'dev';
@@ -46,7 +46,7 @@ function layout({ title, description, canonical, path, robots = 'index, follow',
         apiBase: NETWORK,
         links: NAV.map((l) => ({ ...l, active: l.href === active || (l.href !== '/' && String(active).startsWith(`${l.href}/`)) })),
         // The phone app bar: the room's four places, with icons the navbar draws itself (no icon font on this site).
-        appBar: [{ label: 'Home', href: '/', icon: 'fa-house' }, { label: 'Ride', href: '/ride', icon: 'fa-gamepad' }, { label: 'Watch', href: '/watch', icon: 'fa-play' }, { label: 'Web', href: '/web', icon: 'fa-globe' }],
+        appBar: [{ label: 'Home', href: '/', icon: 'home' }, { label: 'Ride', href: '/ride', icon: 'game' }, { label: 'Watch', href: '/watch', icon: 'play' }, { label: 'Web', href: '/web', icon: 'globe' }],
         history: { type: 'page', title: title || NAME },
         silentLogin: `${BASE}/auth/login?silent=1&next={url}`,
         sessionUrl: '/auth/me',
