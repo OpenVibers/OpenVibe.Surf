@@ -84,7 +84,7 @@ function home({ feed = null } = {}) {
     const tiles = `<ul class="sf-tiles" id="sf-tiles">
 <li class="sf-tile" id="sf-tile-ride" data-sf-surf="ride"><a href="/ride"><span class="sf-tile-ic">${kit.icon('game')}</span><b>Ride</b><span>CS-style surf in the browser: ramps, a millisecond timer, your ghost and the record.</span><span class="sf-tile-go">Ride a map${kit.icon('chevron')}</span></a></li>
 <li class="sf-tile" id="sf-tile-web" data-sf-surf="web"><a href="/web"><span class="sf-tile-ic">${kit.icon('globe')}</span><b>Web</b><span>Surf with Vibe: say what you want, an agent browses for you and reports back with its sources.</span><span class="sf-tile-go">Ask Vibe${kit.icon('chevron')}</span></a></li>
-<li class="sf-tile" id="sf-tile-watch" data-sf-surf="watch"><a href="/watch"><span class="sf-tile-ic">${kit.icon('play')}</span><b>Watch</b><span>Lean back: live streams, clips and the week's AI moments, one swipe or ↑ ↓ to change channel.</span><span class="sf-tile-go">Start watching${kit.icon('chevron')}</span></a></li>
+<li class="sf-tile" id="sf-tile-watch" data-sf-surf="watch"><a href="/watch"><span class="sf-tile-ic">${kit.icon('play')}</span><b>Watch</b><span>Lean back: live streams, clips and the week's AI moments, one swipe or the up and down keys to change channel.</span><span class="sf-tile-go">Start watching${kit.icon('chevron')}</span></a></li>
 </ul>`;
     // The tiles sit right under the hero (sc.room's own html slot comes after the scenes), so they go in before the scenes.
     const room = sc.room({
@@ -102,7 +102,7 @@ function home({ feed = null } = {}) {
             { title: 'Surf the web with Vibe', text: 'Say what you want: a cheap flight and three things to do, or what people say about a shoe. The agent searches, reads the pages that matter on a private desk, keeps its sources, and finishes with a report you can check.',
                 html: `<ol class="sf-demo-steps"><li class="is-done">Searched the web for “Lisbon in March, cheap flights”</li><li class="is-done">Read 4 pages · compared prices on 2 sites</li><li class="is-now">Writing the report with its sources…</li></ol>`,
                 action: { href: '/web', label: 'Ask Vibe' } },
-            { title: 'Lean back and surf what is on', text: 'Live streams first, then the clips people cut and the AI moments of the week, each saying why it is on. Swipe on a phone or press ↑ ↓ on a keyboard.',
+            { title: 'Lean back and surf what is on', text: 'Live streams first, then the clips people cut and the AI moments of the week, each saying why it is on. Swipe on a phone or press the up and down keys on a keyboard.',
                 html: homeWatch(feed),
                 action: { href: '/watch', label: 'Start watching' } },
         ],
@@ -202,7 +202,7 @@ function tvBlock({ feed = null, selectedKey = null, empty = null } = {}) {
 <div class="sf-tv-info"><p class="sf-tv-kind"><span class="sf-pill sf-pill--${esc(k)}">${esc(TV_LABEL[k])}</span><span data-sf-why>${esc(first.why || '')}</span></p>
 <h2 data-sf-title>${esc(first.title || '')}</h2>
 <p class="sf-tv-meta" data-sf-meta>${first.channel && first.channel.username ? `<a href="https://openvibe.live/@${encodeURIComponent(first.channel.username)}">@${esc(first.channel.username)}</a>` : ''}</p>
-<p class="sf-tv-keys"><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-prev aria-label="Previous channel">${kit.icon('up')}</button><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-next aria-label="Next channel">${kit.icon('down')}</button><span class="sf-fine">Swipe, or press <kbd>↑</kbd> <kbd>↓</kbd></span></p></div></div>`;
+<p class="sf-tv-keys"><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-prev aria-label="Previous channel">${kit.icon('up')}</button><button type="button" class="ovk-btn ovk-btn--quiet ovk-btn--small" data-sf-next aria-label="Next channel">${kit.icon('down')}</button><span class="sf-fine">Swipe, or press <kbd>${kit.icon('up')}</kbd> <kbd>${kit.icon('down')}</kbd></span></p></div></div>`;
     const rows = items.map((it, i) => {
         const rowKind = kindOf(it);
         const rowPlay = it.play || {};
