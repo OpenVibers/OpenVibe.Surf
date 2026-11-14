@@ -50,6 +50,7 @@ function layout({ title, description, canonical, path, robots = 'index, follow',
         history: { type: 'page', title: title || NAME },
         silentLogin: `${BASE}/auth/login?silent=1&next={url}`,
         sessionUrl: '/auth/me',
+        tokenUrl: '/auth/navbar-token',
         loginUrl: '/auth/login?next={path}',
         logoutUrl: '/auth/logout?next={path}',
     };
