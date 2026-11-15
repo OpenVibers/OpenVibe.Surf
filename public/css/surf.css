@@ -85,8 +85,8 @@ html[data-ov-motion=off] .sf-tile a:hover{transform: none}
 .sf-demo-tv ul { list-style: none; margin: 0; padding: 0 4px; display: grid; gap: 4px; font-size: .82rem; color: var(--text-secondary, #96a7c2); }
 .sf-demo-tv a { color: inherit; text-decoration: none; }
 .sf-demo-tv a:hover, .sf-demo-tv a:focus-visible { text-decoration: underline; }
-.sf-pill-live { padding: 1px 7px; border-radius: 5px; background: var(--live-red, #e11d48); color: #fff; font-size: .68rem; font-weight: 800; }
-.sf-pill-live--clip, .sf-pill-live--moment { background: var(--room-accent, #00bef6); }
+.sf-pill-live { padding: 1px 7px; border-radius: 5px; background: color-mix(in srgb, var(--live-red, #e11d48), #000 20%); color: #fff; font-size: .68rem; font-weight: 800; }
+.sf-pill-live--clip, .sf-pill-live--moment { background: color-mix(in srgb, var(--room-accent, #00bef6), #000 40%); }
 
 /* Ride: map cards. */
 .sf-maps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
@@ -137,7 +137,8 @@ html[data-ov-motion=off] .sf-tile a:hover{transform: none}
 .sf-tv-kind { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-size: .85rem; color: var(--text-muted, #7386a3); }
 /* Small pills read at 4.5:1 in every room and theme (axe on /watch, 11-15): the room's colour leans toward the text. */
 .sf-pill { padding: 2px 9px; border-radius: 999px; font-size: .72rem; font-weight: 800; background: color-mix(in srgb, var(--room-accent) 16%, transparent); color: color-mix(in srgb, var(--room-strong) 60%, var(--text-primary, #e6edf7)); }
-.sf-pill--live { background: var(--live-red, #e11d48); color: #fff; }
+/* White on a theme's live red (#ef4444) is 3.8:1: the red is a fifth darker (axe on /watch, 11-15). */
+.sf-pill--live { background: color-mix(in srgb, var(--live-red, #e11d48), #000 20%); color: #fff; }
 .sf-tv-meta { margin: 0; font-size: .9rem; }
 .sf-tv-meta a { color: var(--text-secondary, #96a7c2); text-decoration: none; font-weight: 650; }
 .sf-tv-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0; }
