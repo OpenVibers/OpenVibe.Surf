@@ -56,7 +56,7 @@ function createDiscoveryRoutes(ctx) {
     r.get('/robots.txt', async (_req, res) => {
         res.type('text/plain').set('Cache-Control', TEXT).send(
             '# openvibe.surf: the public pages are for search and AI crawlers; sign-in, the API and the task form are not.\n'
-            + seo.robotsTxt({ sitemaps: [abs('/sitemap.xml')], disallow: DISALLOW }));
+            + seo.robotsTxt({ sitemaps: [abs('/sitemap.xml')], disallow: DISALLOW, costly: ['/web/go'] }));   // /web/go fetches the page it is given
     });
 
     // The site as llms.txt describes it, shared by /llms.txt and /llms-full.txt (SEO-33).
